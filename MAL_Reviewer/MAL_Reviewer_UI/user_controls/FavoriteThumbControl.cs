@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
+using MAL_Reviewer_UI.extensions;
 
 namespace MAL_Reviewer_UI.user_controls
 {
@@ -11,8 +12,8 @@ namespace MAL_Reviewer_UI.user_controls
 
             this.lTitle.Text = title;
 
-            if (image_url != null && image_url != "")
-                this.pbImage.Load(image_url);
+            // The thumbnail is downloaded in the background.
+            _ = this.pbImage.LoadImageAsync(image_url);
 
             // Tooltip initialization.
             this.ttTitle.ToolTipTitle = $"{ type } name";
@@ -35,7 +36,7 @@ namespace MAL_Reviewer_UI.user_controls
         private void UcFavoriteThumb_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
-                System.Diagnostics.Process.Start(this.Tag.ToString());
+                Shell.Open(this.Tag);
         }
 
         private void UcFavoriteThumb_MouseEnter(object sender, System.EventArgs e) => this.BackColor = SystemColors.Control;

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>MAL_Reviewer_Core.Tests</RootNamespace>
+    <!-- Only the legacy settings tests use BinaryFormatter, to write the files older versions produced. -->
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MAL_Reviewer_Core\MAL_Reviewer_Core.csproj" />
+  </ItemGroup>
+
+</Project>

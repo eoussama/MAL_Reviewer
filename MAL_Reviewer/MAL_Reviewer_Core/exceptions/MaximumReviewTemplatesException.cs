@@ -3,7 +3,6 @@ using MAL_Reviewer_Core.controllers;
 
 namespace MAL_Reviewer_Core.exceptions
 {
-    [Serializable]
     /// <summary>
     /// Exception that asserts the maximum review templates allowed to be created.
     /// </summary>
@@ -14,7 +13,7 @@ namespace MAL_Reviewer_Core.exceptions
         /// <summary>
         /// Parameterless constructor.
         /// </summary>
-        public MaximumReviewTemplatesException() { }
+        public MaximumReviewTemplatesException() : base($"The maximum ({ ReviewTemplatesController.MaxReviewTemplates }) review templates allowed has been reached!") { }
 
         #endregion
 
@@ -27,7 +26,7 @@ namespace MAL_Reviewer_Core.exceptions
         /// 
         public override string ToString()
         {
-            return $"The maximum ({ ReviewTemplatesController.MaxReviewTemplates }) review templates allowed has been reached!";
+            return this.Message;
         }
         
         #endregion

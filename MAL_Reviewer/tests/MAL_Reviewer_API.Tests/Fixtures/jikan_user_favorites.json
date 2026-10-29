@@ -1,0 +1,41 @@
+{
+  "data": {
+    "anime": [
+      {
+        "mal_id": 1,
+        "url": "https://myanimelist.net/anime/1/Cowboy_Bebop",
+        "images": { "jpg": { "image_url": "https://cdn.myanimelist.net/images/anime/4/19644.jpg" } },
+        "title": "Cowboy Bebop",
+        "type": "TV",
+        "start_year": 1998
+      },
+      {
+        "mal_id": 20,
+        "url": "https://myanimelist.net/anime/20/Naruto",
+        "images": { "jpg": { "image_url": "https://cdn.myanimelist.net/images/anime/1141/142503.jpg" } },
+        "title": "Naruto",
+        "type": "TV",
+        "start_year": 2002
+      }
+    ],
+    "manga": [
+      {
+        "mal_id": 2,
+        "url": "https://myanimelist.net/manga/2/Berserk",
+        "images": { "jpg": { "image_url": "https://cdn.myanimelist.net/images/manga/1/157897.jpg" } },
+        "title": "Berserk",
+        "type": "Manga",
+        "start_year": 1989
+      }
+    ],
+    "characters": [
+      {
+        "mal_id": 1,
+        "url": "https://myanimelist.net/character/1/Spike_Spiegel",
+        "images": { "jpg": { "image_url": "https://cdn.myanimelist.net/images/characters/11/516853.jpg" } },
+        "name": "Spiegel, Spike"
+      }
+    ],
+    "people": []
+  }
+}

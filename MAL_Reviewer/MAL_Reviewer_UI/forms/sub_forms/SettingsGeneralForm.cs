@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows.Forms;
 using MAL_Reviewer_Core;
+using MAL_Reviewer_UI.extensions;
 using MAL_Reviewer_UI.interfaces;
 
 namespace MAL_Reviewer_UI.forms.sub_forms
@@ -43,7 +44,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void StoragePathBrowserControl_BrowserOpenSubmitEventHander(object sender, EventArgs e) => System.Diagnostics.Process.Start(StoragePathBrowserControl.BrowserPath);
+        private void StoragePathBrowserControl_BrowserOpenSubmitEventHander(object sender, EventArgs e) => Shell.Open(StoragePathBrowserControl.BrowserPath);
 
         /// <summary>
         /// Handles the reset all button click.
@@ -56,6 +57,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
             {
                 // Resetting the application's settings.
                 Core.Settings.ResetSettings();
+                Core.Save();
 
                 // Update the displayed information.
                 InitDisplay();
@@ -72,7 +74,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
         public void InitDisplay()
         {
             // Resetting the storage folder path control.
-            StoragePathBrowserControl.BrowserPath = Path.Combine(Core.Configurations.StoragePath, Core.Configurations.StorageFolder);
+            StoragePathBrowserControl.BrowserPath = Core.Configurations.StorageDirectory;
         }
 
         #endregion

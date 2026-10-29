@@ -2,15 +2,13 @@
 using System.Windows.Forms;
 using MAL_Reviewer_API.models.ListEntryModels;
 using MAL_Reviewer_Core.enumerations;
+using MAL_Reviewer_Core.helpers;
+using MAL_Reviewer_UI.extensions;
 
 namespace MAL_Reviewer_UI.user_controls
 {
     public partial class EntryListControl : UserControl
     {
-        private const short
-            fixedHeight = 1500,
-            fixedBottom = 23;
-
         private int listHeight = 0;        
 
         /// <summary>
@@ -39,14 +37,14 @@ namespace MAL_Reviewer_UI.user_controls
         /// <param name="animeList"></param>
         public void UpdateList(List<AnimelistEntryModel> animeList)
         {
-            short _index = 0;
+            int _index = 0;
 
             dgvList.Rows.Clear();
             lCount.Text = animeList.Count.ToString();
 
             // Populating the DataDridView.
             animeList.ForEach(a => {
-                dgvList.Rows.Add(_index + 1, a.Title, $"{ a.Watched_episodes }/ { (a.Total_episodes == 0 ? "?" : a.Total_episodes.ToString()) }", "", a.Score, a.Type);
+                dgvList.Rows.Add(_index + 1, a.Title, DisplayFormat.Progress(a.Watched_episodes, a.Total_episodes), "", a.Score, a.Type);
                 dgvList.Rows[_index++].Tag = a.Url;
             });
 
@@ -59,14 +57,14 @@ namespace MAL_Reviewer_UI.user_controls
         /// <param name="animeList"></param>
         public void UpdateList(List<MangalistEntryModel> mangaList)
         {
-            short _index = 0;
+            int _index = 0;
 
             dgvList.Rows.Clear();
             lCount.Text = mangaList.Count.ToString();
 
             // Populating the DataDridView.
             mangaList.ForEach(a => {
-                dgvList.Rows.Add(_index + 1, a.Title, $"{ a.Read_chapters }/ { (a.Total_chapters == 0 ? "?" : a.Total_chapters.ToString()) }", $"{ a.Read_volumes }/ { (a.Total_volumes == 0 ? "?" : a.Total_volumes.ToString()) }", a.Score, a.Type);
+                dgvList.Rows.Add(_index + 1, a.Title, DisplayFormat.Progress(a.Read_chapters, a.Total_chapters), DisplayFormat.Progress(a.Read_volumes, a.Total_volumes), a.Score, a.Type);
                 dgvList.Rows[_index++].Tag = a.Url;
             });
 
@@ -90,12 +88,7 @@ namespace MAL_Reviewer_UI.user_controls
         {
             Height = 198;
 
-            if (dgvList.Rows.Count == 0)
-                listHeight = dgvList.Top + lType.Top;
-            else if (dgvList.Rows.Count < 50)
-                listHeight = dgvList.Top + dgvList.ColumnHeadersHeight * 2 + dgvList.Rows.GetRowsHeight(DataGridViewElementStates.None) + fixedBottom;
-            else
-                listHeight = dgvList.Top + dgvList.ColumnHeadersHeight * 2 + fixedHeight + fixedBottom;
+            listHeight = LayoutMath.EntryListHeight(dgvList.Rows.Count, dgvList.Top, lType.Top, dgvList.ColumnHeadersHeight, dgvList.Rows.GetRowsHeight(DataGridViewElementStates.None));
 
             Height = ListHeight;
         }
@@ -105,7 +98,7 @@ namespace MAL_Reviewer_UI.user_controls
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 dgvList.Rows[e.RowIndex].Selected = true;
-                System.Diagnostics.Process.Start(dgvList.Rows[e.RowIndex].Tag.ToString());
+                Shell.Open(dgvList.Rows[e.RowIndex].Tag);
             }
         }
     }

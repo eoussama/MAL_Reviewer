@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_Core.models.ReviewTemplateModels;
 
 namespace MAL_Reviewer_UI.user_controls
@@ -23,13 +23,11 @@ namespace MAL_Reviewer_UI.user_controls
         {
             InitializeComponent();
 
-            StringBuilder sb = new StringBuilder();
-
             this.reviewTemplateModel = reviewTemplateModel;
-            this.selectRadioButton.Text = (this.reviewTemplateModel.TemplateName.Length > 20 ? sb.Append(this.reviewTemplateModel.TemplateName.Substring(0, 20)).Append("...").ToString() : this.reviewTemplateModel.TemplateName); sb.Clear();
-            this.aspectsLabel.Text = sb.Append("Aspects: ").Append(this.reviewTemplateModel.TemplateAspects?.Count).ToString(); sb.Clear();
-            this.introLabel.Text = sb.Append("intro: ").Append(this.reviewTemplateModel.UseIntro.ToString()).ToString().ToLower(); sb.Clear();
-            this.tldrLabel.Text = sb.Append("tl;dr: ").Append(this.reviewTemplateModel.UserTLDR.ToString().ToLower()).ToString(); sb.Clear();
+            this.selectRadioButton.Text = TemplateSummary.CardName(this.reviewTemplateModel);
+            this.aspectsLabel.Text = TemplateSummary.Aspects(this.reviewTemplateModel);
+            this.introLabel.Text = TemplateSummary.Intro(this.reviewTemplateModel);
+            this.tldrLabel.Text = TemplateSummary.Tldr(this.reviewTemplateModel);
             this.extraInfoTooltip.ToolTipTitle = this.reviewTemplateModel.TemplateName;
 
             // Tooltip content.

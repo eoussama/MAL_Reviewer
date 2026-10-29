@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
 using MAL_Reviewer_API;
-using MAL_Reviewer_API.models.ListEntryModels;
 using MAL_Reviewer_API.models.UserModels;
 using MAL_Reviewer_Core;
+using MAL_Reviewer_Core.helpers;
+using MAL_Reviewer_Core.services;
+using MAL_Reviewer_UI.extensions;
 
 namespace MAL_Reviewer_UI.forms
 {
@@ -26,9 +27,6 @@ namespace MAL_Reviewer_UI.forms
             // Whether the form is ready for input or not.
             ready = true,
 
-            // Whether closing the form is allowed or not.
-            allow = true,
-
             // Whether or not the form was automatically opened or not.
             auto = false;
 
@@ -45,7 +43,7 @@ namespace MAL_Reviewer_UI.forms
         /// <summary>
         /// The cancellation token.
         /// </summary>
-        private CancellationTokenSource cts;
+        private readonly CancellationTokenSource cts;
 
         #endregion
 
@@ -59,6 +57,7 @@ namespace MAL_Reviewer_UI.forms
             InitializeComponent();
 
             this.ActiveControl = searchControl.Controls["inputTextBox"];
+            this.searchControl.MaxLength = UsernameRule.MaxLength;
             cts = new CancellationTokenSource();
         }
 
@@ -92,59 +91,72 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"></param>
         private async void BLoad_Click(object sender, EventArgs e)
         {
-            string username = searchControl.InnerText.Trim();
+            if (!this.ready)
+            {
+                return;
+            }
+
+            string username = UsernameRule.Normalize(searchControl.InnerText);
+
+            if (!UsernameRule.IsValid(username))
+            {
+                MessageBox.Show(UsernameRule.InvalidMessage, "Notice", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
 
             this.bLoad.Enabled = false;
             this.searchControl.ToggleLoading(true);
             this.ready = false;
 
+            MALUserModel userModel = null;
+            string error = null;
+
             try
             {
-                if (username.Length < 3) throw new Exception("Please input a valid username!");
-                
-                // Get the data of the user.
-                MALUserModel userModel = await MALHelper.GetUser(username, cts.Token);
+                // Get the data of the user, along with their lists.
+                userModel = await new UserLoader(MALHelper.Api).LoadAsync(username, cts.Token);
 
-                if (userModel == null) throw new Exception($"No user under the username “{ username }” was found!");
-                else
+                if (userModel == null)
                 {
-                    IEnumerable<AnimelistEntryModel> animeList = await MALHelper.GetAnimeList(username, (int)userModel?.Anime_stats.Total_entries, cts.Token);
-                    IEnumerable<MangalistEntryModel> mangaList = await MALHelper.GetMangaList(username, (int)userModel?.Manga_stats.Total_entries, cts.Token);
-
-                    if (this.allow)
-                    {
-                        if (this.setDefault)
-                        {
-                            // Setting the loaded user's name as the default one.
-                            Core.Settings.UserSettings.DefaultUser = username;
-                        }
-
-                        this.ready = true;
-                        this.Close();
-
-                        userModel.AnimeList = animeList;
-                        userModel.MangaList = mangaList;
-                        UserLoadedEvent?.Invoke(this, userModel);
-                    }
+                    error = $"No user under the username “{ username }” was found!";
                 }
             }
-            catch (Exception ex)
+            catch (OperationCanceledException)
             {
-                if (this.allow)
-                {
-                    MessageBox.Show(ex.Message, "Notice", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                }
+                // The form was closed while loading.
+                return;
             }
-            finally
+            catch (DataSourceUnavailableException ex)
             {
-                if (this.allow)
-                {
-                    this.bLoad.Enabled = true;
-                    this.searchControl.ToggleLoading(false);
-                    this.ActiveControl = searchControl.Controls["inputTextBox"];
-                    this.ready = true;
-                }
+                error = $"The user's data could not be fetched right now, please try again later.\n\n{ ex.Message }";
             }
+
+            if (this.IsDisposed || cts.IsCancellationRequested)
+            {
+                return;
+            }
+
+            this.ready = true;
+
+            if (error != null)
+            {
+                MessageBox.Show(error, "Notice", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+                this.bLoad.Enabled = true;
+                this.searchControl.ToggleLoading(false);
+                this.ActiveControl = searchControl.Controls["inputTextBox"];
+                return;
+            }
+
+            if (this.setDefault)
+            {
+                // Setting the loaded user's name as the default one.
+                Core.Settings.UserSettings.DefaultUser = username;
+                Core.Save();
+            }
+
+            this.Close();
+            UserLoadedEvent?.Invoke(this, userModel);
         }
 
         /// <summary>
@@ -166,7 +178,7 @@ namespace MAL_Reviewer_UI.forms
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void LlNoAcc_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => System.Diagnostics.Process.Start("https://myanimelist.net/register.php");
+        private void LlNoAcc_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => Shell.Open(MalUrls.Register);
 
         /// <summary>
         /// Handles the closing of the form.
@@ -178,8 +190,16 @@ namespace MAL_Reviewer_UI.forms
             if (!this.ready)
             {
                 cts.Cancel();
-                this.allow = false;
             }
+        }
+
+        /// <summary>
+        /// Releases the cancellation source with the form.
+        /// </summary>
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            base.OnFormClosed(e);
+            cts.Dispose();
         }
 
         #endregion

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using MAL_Reviewer_Core.exceptions;
 using MAL_Reviewer_Core.interfaces;
 using MAL_Reviewer_Core.models.ReviewTemplateModels;
 
 namespace MAL_Reviewer_Core.controllers
 {
-    [Serializable]
     /// <summary>
     /// The collection of review templates
     /// /// </summary>
@@ -32,6 +32,7 @@ namespace MAL_Reviewer_Core.controllers
         /// <summary>
         /// Gets the number of review templates loaded into the memory.
         /// </summary>
+        [JsonIgnore]
         public short Count
         {
             get => (short)this.ReviewTemplates.Count;
@@ -55,7 +56,7 @@ namespace MAL_Reviewer_Core.controllers
         /// consideration the maximum allowed number.
         /// </summary>
         /// <returns></returns>
-        private bool IsAllowedToAddReviewTemplate() => ReviewTemplates?.Count <= MaxReviewTemplates;
+        private bool IsAllowedToAddReviewTemplate() => ReviewTemplates.Count < MaxReviewTemplates;
 
         #endregion
 
@@ -73,10 +74,6 @@ namespace MAL_Reviewer_Core.controllers
                 return ReviewTemplates[index];
             }
             catch (ArgumentOutOfRangeException)
-            {
-                throw new InvalidReviewTemplateException(index);
-            }
-            catch (IndexOutOfRangeException)
             {
                 throw new InvalidReviewTemplateException(index);
             }
@@ -120,10 +117,6 @@ namespace MAL_Reviewer_Core.controllers
             {
                 throw new InvalidReviewTemplateException(index);
             }
-            catch (IndexOutOfRangeException)
-            {
-                throw new InvalidReviewTemplateException(index);
-            }
 
             // Returning the name of the deleted review template.
             return deletedReviewTemplateName;
@@ -153,10 +146,6 @@ namespace MAL_Reviewer_Core.controllers
             {
                 throw new InvalidReviewTemplateException(index);
             }
-            catch (IndexOutOfRangeException)
-            {
-                throw new InvalidReviewTemplateException(index);
-            }
         }
 
         /// <summary>
@@ -165,11 +154,13 @@ namespace MAL_Reviewer_Core.controllers
         /// <returns></returns>
         public string GetDuplicateName()
         {
-            // Getting the number of the review template that have the same default review template name as their title.
-            short reviewTemplateNameDupNumber = (short)ReviewTemplates.Where(reviewTemp => reviewTemp.TemplateName.StartsWith(ReviewTemplateModel.DefaultReviewTemplateName)).Count();
+            // Constructing the first free review template name, (ex: defaultReviewTemplateName, defaultReviewTemplateName 1, defaultReviewTemplateName 2...).
+            string reviewTemplateName = ReviewTemplateModel.DefaultReviewTemplateName;
 
-            // Constructing a review template name, (ex: defaultReviewTemplateName, defaultReviewTemplateName 1, defaultReviewTemplateName 2...).
-            string reviewTemplateName = $"{ ReviewTemplateModel.DefaultReviewTemplateName }{ (reviewTemplateNameDupNumber > 0 ? (" " + reviewTemplateNameDupNumber.ToString()) : "") }";
+            for (int number = 1; ReviewTemplates.Any(reviewTemp => reviewTemp.TemplateName == reviewTemplateName); number++)
+            {
+                reviewTemplateName = $"{ ReviewTemplateModel.DefaultReviewTemplateName } { number }";
+            }
 
             return reviewTemplateName;
         }

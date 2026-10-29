@@ -9,17 +9,26 @@ namespace MAL_Reviewer_UI.user_controls
     public partial class CigControl : UserControl
     {
         /// <summary>
+        /// The fonts of the close label, (the bold one is shown while hovered and created once).
+        /// </summary>
+        private Font regularCloseFont, boldCloseFont;
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         public CigControl()
         {
             InitializeComponent();
 
+            this.regularCloseFont = this.closeLabel.Font;
+
             this.cigLabel.MouseEnter += CigControl_MouseEnter;
             this.cigLabel.MouseLeave += CigControl_MouseLeave;
 
             this.closeLabel.MouseEnter += CigControl_MouseEnter;
             this.closeLabel.MouseLeave += CigControl_MouseLeave;
+
+            this.Disposed += (s, e) => this.boldCloseFont?.Dispose();
         }
 
         /// <summary>
@@ -41,18 +50,23 @@ namespace MAL_Reviewer_UI.user_controls
 
         private void CloseLabel_MouseEnter(object sender, System.EventArgs e)
         {
-            this.closeLabel.Font = new Font(this.closeLabel.Font.FontFamily, this.closeLabel.Font.Size, FontStyle.Bold);
+            this.boldCloseFont ??= new Font(this.regularCloseFont, FontStyle.Bold);
+            this.closeLabel.Font = this.boldCloseFont;
         }
 
         private void CloseLabel_MouseLeave(object sender, System.EventArgs e)
         {
-            this.closeLabel.Font = new Font(this.closeLabel.Font.FontFamily, this.closeLabel.Font.Size, FontStyle.Regular);
+            this.closeLabel.Font = this.regularCloseFont;
         }
 
         private void CloseLabel_Click(object sender, System.EventArgs e)
         {
-            // Destroying the label control.
-            this.Dispose();
+            // Removing the label control once the click is handled, since a control can't dispose itself from its own event.
+            this.BeginInvoke(new MethodInvoker(() =>
+            {
+                this.Parent?.Controls.Remove(this);
+                this.Dispose();
+            }));
         }
 
         private void CigControl_MouseEnter(object sender, System.EventArgs e)

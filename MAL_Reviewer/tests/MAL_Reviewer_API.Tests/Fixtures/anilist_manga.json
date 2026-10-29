@@ -1,0 +1,22 @@
+{
+  "data": {
+    "Media": {
+      "idMal": 2,
+      "siteUrl": "https://anilist.co/manga/30002",
+      "title": {
+        "romaji": "Berserk",
+        "english": "Berserk"
+      },
+      "format": "MANGA",
+      "status": "RELEASING",
+      "episodes": null,
+      "chapters": null,
+      "volumes": null,
+      "averageScore": 92,
+      "description": "His name is Guts, the Black Swordsman, a feared warrior spoken of only in whispers. Bearer of a gigantic sword, an iron &amp; more.",
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/manga/cover/medium/bx30002-Cul4OeN7bYtn.jpg"
+      }
+    }
+  }
+}

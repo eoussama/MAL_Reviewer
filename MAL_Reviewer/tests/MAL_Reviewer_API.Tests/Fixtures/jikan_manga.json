@@ -1,0 +1,21 @@
+{
+  "data": {
+    "mal_id": 2,
+    "url": "https://myanimelist.net/manga/2/Berserk",
+    "images": {
+      "jpg": {
+        "image_url": "https://cdn.myanimelist.net/images/manga/1/157897.jpg"
+      }
+    },
+    "approved": true,
+    "title": "Berserk",
+    "type": "Manga",
+    "chapters": null,
+    "volumes": null,
+    "status": "Publishing",
+    "publishing": true,
+    "score": 9.47,
+    "rank": 1,
+    "synopsis": "Guts, a former mercenary now known as the \"Black Swordsman,\" is out for revenge."
+  }
+}

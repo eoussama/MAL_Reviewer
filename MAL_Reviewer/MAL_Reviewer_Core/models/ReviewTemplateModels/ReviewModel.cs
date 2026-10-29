@@ -3,7 +3,6 @@ using MAL_Reviewer_Core.enumerations;
 
 namespace MAL_Reviewer_Core.models.ReviewTemplateModels
 {
-    [Serializable]
     /// <summary>
     /// The review model.
     /// </summary>
@@ -59,6 +58,11 @@ namespace MAL_Reviewer_Core.models.ReviewTemplateModels
         #endregion
 
         #region Constructors
+
+        /// <summary>
+        /// Parameterless constructor.
+        /// </summary>
+        public ReviewModel() { }
 
         /// <summary>
         /// Constructor with all parameters.

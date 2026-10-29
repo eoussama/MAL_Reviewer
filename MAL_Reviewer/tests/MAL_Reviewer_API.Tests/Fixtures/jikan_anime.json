@@ -1,0 +1,24 @@
+{
+  "data": {
+    "mal_id": 1,
+    "url": "https://myanimelist.net/anime/1/Cowboy_Bebop",
+    "images": {
+      "jpg": {
+        "image_url": "https://cdn.myanimelist.net/images/anime/4/19644.jpg",
+        "small_image_url": "https://cdn.myanimelist.net/images/anime/4/19644t.jpg",
+        "large_image_url": "https://cdn.myanimelist.net/images/anime/4/19644l.jpg"
+      }
+    },
+    "approved": true,
+    "title": "Cowboy Bebop",
+    "type": "TV",
+    "source": "Original",
+    "episodes": 26,
+    "status": "Finished Airing",
+    "airing": false,
+    "score": 8.75,
+    "scored_by": 1000000,
+    "rank": 46,
+    "synopsis": "Crime is timeless. By the year 2071, humanity has expanded across the galaxy."
+  }
+}

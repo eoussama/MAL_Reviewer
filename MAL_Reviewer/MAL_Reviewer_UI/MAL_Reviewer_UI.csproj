@@ -1,301 +1,43 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{75B6EDAD-72E0-4343-B9F2-187C8DA035A7}</ProjectGuid>
     <OutputType>WinExe</OutputType>
+    <TargetFramework>net11.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- Allows building and publishing the Windows app from the Linux dev container. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <RootNamespace>MAL_Reviewer_UI</RootNamespace>
     <AssemblyName>MAL_Reviewer_UI</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
     <ApplicationIcon>logo.ico</ApplicationIcon>
+
+    <!-- Keeps the layout the forms were designed with on .NET Framework. -->
+    <ApplicationDefaultFont>Microsoft Sans Serif, 8.25pt</ApplicationDefaultFont>
+    <ApplicationHighDpiMode>DpiUnawareGdiScaled</ApplicationHighDpiMode>
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+
+    <!-- Some resx files hold binary-serialized payloads (ImageListStreamer, bitmaps). -->
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="System.Resources.Extensions" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="extensions\ButtonHighlight.cs" />
-    <Compile Include="extensions\Loader.cs" />
-    <Compile Include="extensions\SubFormToggle.cs" />
-    <Compile Include="forms\LoadUserForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\LoadUserForm.Designer.cs">
-      <DependentUpon>LoadUserForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="forms\NewReviewForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\NewReviewForm.Designer.cs">
-      <DependentUpon>NewReviewForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="forms\SettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\SettingsForm.Designer.cs">
-      <DependentUpon>SettingsForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsGeneralForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsGeneralForm.Designer.cs">
-      <DependentUpon>SettingsGeneralForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsInfoForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsInfoForm.Designer.cs">
-      <DependentUpon>SettingsInfoForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsSearchForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsSearchForm.Designer.cs">
-      <DependentUpon>SettingsSearchForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsTemplateForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsTemplateForm.Designer.cs">
-      <DependentUpon>SettingsTemplateForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsThemeForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsThemeForm.Designer.cs">
-      <DependentUpon>SettingsThemeForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsUserForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\sub_forms\SettingsUserForm.Designer.cs">
-      <DependentUpon>SettingsUserForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="forms\WelcomeForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="forms\WelcomeForm.Designer.cs">
-      <DependentUpon>WelcomeForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="interfaces\ISubForm.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
+    <ProjectReference Include="..\MAL_Reviewer_Core\MAL_Reviewer_Core.csproj" />
+    <ProjectReference Include="..\MAL_Reviewer_API\MAL_Reviewer_API.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="user_controls\CardControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\CardControl.Designer.cs">
-      <DependentUpon>CardControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="user_controls\CigControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\CigControl.Designer.cs">
-      <DependentUpon>CigControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="user_controls\EntryListControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\EntryListControl.Designer.cs">
-      <DependentUpon>EntryListControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="user_controls\FavoriteThumbControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\FavoriteThumbControl.Designer.cs">
-      <DependentUpon>FavoriteThumbControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="user_controls\LoaderControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\LoaderControl.Designer.cs">
-      <DependentUpon>LoaderControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="user_controls\PathBrowserControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\PathBrowserControl.Designer.cs">
-      <DependentUpon>PathBrowserControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="user_controls\ReviewCardControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\ReviewCardControl.Designer.cs">
-      <DependentUpon>ReviewCardControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="user_controls\ReviewTemplatePreviewCardControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\ReviewTemplatePreviewCardControl.Designer.cs">
-      <DependentUpon>ReviewTemplatePreviewCardControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="user_controls\TargetSearchCardControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\TargetSearchCardControl.Designer.cs">
-      <DependentUpon>TargetSearchCardControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="user_controls\TextboxControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="user_controls\TextboxControl.Designer.cs">
-      <DependentUpon>TextboxControl.cs</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="forms\LoadUserForm.resx">
-      <DependentUpon>LoadUserForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\NewReviewForm.resx">
-      <DependentUpon>NewReviewForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\SettingsForm.resx">
-      <DependentUpon>SettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\sub_forms\SettingsGeneralForm.resx">
-      <DependentUpon>SettingsGeneralForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\sub_forms\SettingsInfoForm.resx">
-      <DependentUpon>SettingsInfoForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\sub_forms\SettingsSearchForm.resx">
-      <DependentUpon>SettingsSearchForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\sub_forms\SettingsTemplateForm.resx">
-      <DependentUpon>SettingsTemplateForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\sub_forms\SettingsThemeForm.resx">
-      <DependentUpon>SettingsThemeForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\sub_forms\SettingsUserForm.resx">
-      <DependentUpon>SettingsUserForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="forms\WelcomeForm.resx">
-      <DependentUpon>WelcomeForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
+    <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\CardControl.resx">
-      <DependentUpon>CardControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\CigControl.resx">
-      <DependentUpon>CigControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\EntryListControl.resx">
-      <DependentUpon>EntryListControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\FavoriteThumbControl.resx">
-      <DependentUpon>FavoriteThumbControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\LoaderControl.resx">
-      <DependentUpon>LoaderControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\PathBrowserControl.resx">
-      <DependentUpon>PathBrowserControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\ReviewCardControl.resx">
-      <DependentUpon>ReviewCardControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\ReviewTemplatePreviewCardControl.resx">
-      <DependentUpon>ReviewTemplatePreviewCardControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\TargetSearchCardControl.resx">
-      <DependentUpon>TargetSearchCardControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="user_controls\TextboxControl.resx">
-      <DependentUpon>TextboxControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MAL_Reviewer_Core\MAL_Reviewer_Core.csproj">
-      <Project>{b2e0795b-0a84-442c-8c19-659e63b45cc0}</Project>
-      <Name>MAL_Reviewer_Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="D:\scripting\C#\MAL_Reviewer\MAL_Reviewer\MAL_Reviewer_API\MAL_Reviewer_API.csproj">
-      <Project>{3daf19bb-e29b-4e5b-9c48-2e634933c03b}</Project>
-      <Name>MAL_Reviewer_API</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="images\icons\credits.txt" />
-    <Content Include="images\icons\icon_anime.png" />
-    <Content Include="images\icons\icon_close.png" />
-    <Content Include="images\icons\icon_favorite.png" />
-    <Content Include="images\icons\icon_filter.png" />
-    <Content Include="images\icons\icon_info.png" />
-    <Content Include="images\icons\icon_link.png" />
-    <Content Include="images\icons\icon_manga.png" />
-    <Content Include="images\icons\icon_menu.png" />
-    <Content Include="images\icons\icon_search.png" />
-    <Content Include="images\icons\icon_open.png" />
-    <Content Include="images\icons\icon_add.png" />
-    <Content Include="images\icons\icon_settings.png" />
-    <Content Include="images\icons\icon_sort.png" />
-    <Content Include="images\icons\icon_delete.png" />
-    <Content Include="images\icons\icon_user.png" />
-    <Content Include="images\loading-gifs\loading_gif_control-light.gif" />
-    <Content Include="images\loading-gifs\loading_gif_control.gif" />
-    <Content Include="images\loading-gifs\loading_gif_white.gif" />
-    <Content Include="images\logo\credits.txt" />
-    <Content Include="images\logo\logo.ico" />
-    <Content Include="images\logo\logo.png" />
-    <Content Include="images\logo\logo.svg" />
-    <Content Include="logo.ico" />
-    <None Include="Resources\icon-manga.png" />
-    <None Include="Resources\icon-anime.png" />
-    <None Include="Resources\icon-link.png" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>

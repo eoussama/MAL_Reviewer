@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using MAL_Reviewer_Core.helpers;
+using MAL_Reviewer_UI.extensions;
 
 namespace MAL_Reviewer_UI.forms.sub_forms
 {
@@ -16,34 +18,34 @@ namespace MAL_Reviewer_UI.forms.sub_forms
             InitializeComponent();
 
             // Displaying the application's title.
-            ApplicationTitleLabel.Text = Properties.Settings.Default["title"].ToString();
+            ApplicationTitleLabel.Text = AppInfo.Title;
 
             // Displaying the application's version.
-            ApplicationVersionLabel.Text = Properties.Settings.Default["version"].ToString();
+            ApplicationVersionLabel.Text = AppInfo.Version;
 
             // Displaying the application's description.
-            ApplicationDescriptionLabel.Text = string.Format(Properties.Settings.Default["description"].ToString(), ApplicationTitleLabel.Text);
+            ApplicationDescriptionLabel.Text = AppInfo.Description;
 
             // Displaying the author's name.
-            ApplicationAuthorLinkLabel.Text = Properties.Settings.Default["author"].ToString();
+            ApplicationAuthorLinkLabel.Text = AppInfo.Author;
 
             // Displaying the application's license.
-            ApplicationLicenseLinkLabel.Text = Properties.Settings.Default["license"].ToString();
+            ApplicationLicenseLinkLabel.Text = AppInfo.License;
 
             // Assigning the author's link.
-            ApplicationAuthorLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = Properties.Settings.Default["author_link"].ToString() });
+            ApplicationAuthorLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = AppInfo.AuthorLink });
 
             // Assigning the license's link.
-            ApplicationLicenseLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = Properties.Settings.Default["license_link"].ToString() });
+            ApplicationLicenseLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = AppInfo.LicenseLink });
 
             // Assigning the repository's link.
-            ApplicationRepoLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = Properties.Settings.Default["repo_link"].ToString() });
+            ApplicationRepoLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = AppInfo.RepoLink });
 
             // Assigning the bug report's link.
-            ApplicationBugReportLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = Properties.Settings.Default["bug_report_link"].ToString() });
+            ApplicationBugReportLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = AppInfo.BugReportLink });
 
             // Assigning the contact email.
-            ApplicationContactLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = $"mailto:{ Properties.Settings.Default["author_email"].ToString() }?subject={ ApplicationTitleLabel.Text }%20message" });
+            ApplicationContactLinkLabel.Links.Add(new LinkLabel.Link() { LinkData = AppInfo.ContactLink });
 
             // Moving the version's label next to the title's.
             ApplicationVersionLabel.Left = ApplicationTitleLabel.Right;
@@ -73,35 +75,35 @@ namespace MAL_Reviewer_UI.forms.sub_forms
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ApplicationAuthorLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => System.Diagnostics.Process.Start(e.Link.LinkData as string);
+        private void ApplicationAuthorLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => Shell.Open(e.Link.LinkData);
 
         /// <summary>
         /// Redirects to the license's page.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ApplicationLicenseLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => System.Diagnostics.Process.Start(e.Link.LinkData as string);
+        private void ApplicationLicenseLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => Shell.Open(e.Link.LinkData);
 
         /// <summary>
         /// Redirects to the application's repository.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ApplicationRepoLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => System.Diagnostics.Process.Start(e.Link.LinkData as string);
+        private void ApplicationRepoLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => Shell.Open(e.Link.LinkData);
 
         /// <summary>
         /// Redirects to the bug reporting page.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ApplicationBugReportLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => System.Diagnostics.Process.Start(e.Link.LinkData as string);
+        private void ApplicationBugReportLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => Shell.Open(e.Link.LinkData);
 
         /// <summary>
         /// Opens the default mail client.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ApplicationContactLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => System.Diagnostics.Process.Start(e.Link.LinkData as string);
+        private void ApplicationContactLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) => Shell.Open(e.Link.LinkData);
 
         /// <summary>
         /// Redirects to the Jikan project.
@@ -112,7 +114,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
         {
             if (e.Button == MouseButtons.Left)
             {
-                System.Diagnostics.Process.Start("https://github.com/jikan-me");
+                Shell.Open(AppInfo.JikanLink);
             }
         }
 
@@ -125,7 +127,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
         {
             if (e.Button == MouseButtons.Left)
             {
-                System.Diagnostics.Process.Start("https://www.freepik.com/");
+                Shell.Open(AppInfo.FreepikLink);
             }
         }
 
@@ -138,7 +140,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
         {
             if (e.Button == MouseButtons.Left)
             {
-                System.Diagnostics.Process.Start("https://www.flaticon.com/packs/font-awesome");
+                Shell.Open(AppInfo.FontAwesomeLink);
             }
         }
 

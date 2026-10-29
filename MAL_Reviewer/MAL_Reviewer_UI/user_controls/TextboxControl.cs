@@ -1,6 +1,8 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
+using MAL_Reviewer_Core.helpers;
 
 namespace MAL_Reviewer_UI.user_controls
 {
@@ -12,31 +14,34 @@ namespace MAL_Reviewer_UI.user_controls
         public event EventHandler<string> TextboxSubmitEvent;
 
         private bool toggleIcon = true;
-        private byte extra = 0;
-        private string lastSub = "";
-
-        private int subMin = 3;
         private const int searchInterval = 500;
 
+        // Decides whether a submit is new; only successful submits are remembered.
+        private readonly SearchGate gate = new SearchGate();
+        private string pendingText;
+        private int pendingKind;
+
         LoaderControl loaderControl;
-        private Timer inputDelay;
+        private System.Windows.Forms.Timer inputDelay;
 
         /// <summary>
         /// Gets and sets the text in inputTextBox.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string InnerText
         {
             get => this.inputTextBox.Text;
             set
             {
-                this.inputTextBox.Text = value;
-                this.placeholderLabel.Visible = value.Trim().Length == 0;
+                this.inputTextBox.Text = value ?? string.Empty;
+                this.placeholderLabel.Visible = this.inputTextBox.Text.Trim().Length == 0;
             }
         }
 
         /// <summary>
         /// Gets and sets the icon of the iconPictureBox.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Image Icon
         {
             get => iconPictureBox.Image;
@@ -46,6 +51,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Enables and disables the use of an icon for the textbox.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ToggleIcon
         {
             get => this.toggleIcon;
@@ -70,6 +76,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the background color of the textbox.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Color BackgroundColor
         {
             get => this.BackColor;
@@ -89,6 +96,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Sets the maximum input length of the textbox.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxLength
         {
             set => this.inputTextBox.MaxLength = value;
@@ -97,25 +105,29 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the minimum length required to submit the textbox.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public int SubmitMin
         {
-            get => this.subMin;
-            set => this.subMin = value;
+            get => this.gate.MinLength;
+            set => this.gate.MinLength = value;
         }
 
         /// <summary>
         /// Gets and sets the ability to activates the loading animation whne finishing typing.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool AllowLoad { get; set; } = false;
 
         /// <summary>
         /// Gets and sets the ability to auto submit the textbox when finished typing.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool AutoSubmit { get; set; } = false;
 
         /// <summary>
         /// Gets and sets the control's placeholder.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string Placeholder
         {
             get => this.placeholderLabel.Text;
@@ -125,6 +137,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the control's placeholder's forecolor.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Color PlaceholderColor
         {
             get => this.placeholderLabel.ForeColor;
@@ -142,11 +155,12 @@ namespace MAL_Reviewer_UI.user_controls
             };
             this.Controls.Add(loaderControl);
             this.loaderControl.BringToFront();
-            this.inputDelay = new Timer
+            this.inputDelay = new System.Windows.Forms.Timer
             {
                 Interval = searchInterval
             };
             this.inputDelay.Tick += InputDelay_Tick;
+            this.Disposed += (s, e) => this.inputDelay.Dispose();
 
             TextboxControl_Leave(this, EventArgs.Empty);
         }
@@ -185,22 +199,49 @@ namespace MAL_Reviewer_UI.user_controls
         /// </summary>
         public void Submit()
         {
-            // Check if the length of the textbox's value is bigger or equal to the minimum allowed and if the
-            // value about to be submited isn't the same as the last one.
-            if (this.inputTextBox.Text.Trim().Length >= this.SubmitMin && (this.lastSub != this.inputTextBox.Text.Trim() || byte.Parse(this.Tag.ToString()) != this.extra))
-            {
-                this.TextboxSubmitEvent?.Invoke(this, inputTextBox.Text);
-                this.lastSub = this.inputTextBox.Text.Trim();
-                this.extra = byte.Parse(this.Tag.ToString());
+            string text = this.inputTextBox.Text.Trim();
+            int kind = GetSearchKind();
 
-                // Check if the loading animation is allowed.
-                if (this.AllowLoad)
-                {
-                    // Toggle the loading animation.
-                    this.ToggleLoading(true);
-                }
+            // Check if the text is long enough and differs from the last successful submit, (or its kind does).
+            if (!this.gate.ShouldSubmit(text, kind))
+            {
+                return;
+            }
+
+            this.pendingText = text;
+            this.pendingKind = kind;
+
+            // Check if the loading animation is allowed; it's turned on before the handler runs,
+            // so a handler that finishes immediately can still turn it off.
+            if (this.AllowLoad)
+            {
+                this.ToggleLoading(true);
+            }
+
+            this.TextboxSubmitEvent?.Invoke(this, text);
+        }
+
+        /// <summary>
+        /// Tells the textbox how the last submit ended. Only successful submits are remembered,
+        /// so a failed one can be retried with the same text.
+        /// </summary>
+        /// <param name="succeeded"> Whether the submit succeeded. </param>
+        public void CompleteSubmit(bool succeeded)
+        {
+            if (succeeded)
+            {
+                this.gate.MarkSucceeded(this.pendingText, this.pendingKind);
             }
         }
+
+        /// <summary>
+        /// The kind of search, stored in the control's tag, (ex: the selected Anime/Manga option).
+        /// </summary>
+        private int GetSearchKind()
+        {
+            return int.TryParse(this.Tag?.ToString(), out int kind) ? kind : 0;
+        }
+
 
         /// <summary>
         /// Clear the textbox.

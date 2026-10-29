@@ -1,5 +1,7 @@
-﻿using System.Windows.Forms;
+﻿using System.ComponentModel;
+using System.Windows.Forms;
 using System.Drawing;
+using MAL_Reviewer_UI.extensions;
 
 namespace MAL_Reviewer_UI.user_controls
 {
@@ -8,6 +10,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Get and set the user control's back color.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Color @Color
         {
             get => this.BackColor;
@@ -36,13 +39,13 @@ namespace MAL_Reviewer_UI.user_controls
             switch (this.Color.Name)
             {
                 case "White":
-                    _image = Properties.Resources.loading_gif_white;
+                    _image = Icons.LoadingWhite;
                     break;
                 case "ControlLight":
-                    _image = Properties.Resources.loading_gif_control_light;
+                    _image = Icons.LoadingControlLight;
                     break;
                 default:
-                    _image = Properties.Resources.loading_gif_control;
+                    _image = Icons.LoadingControl;
                     break;
             }
 

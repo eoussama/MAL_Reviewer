@@ -1,0 +1,44 @@
+{
+  "data": {
+    "mal_id": 1,
+    "username": "Xinil",
+    "url": "https://myanimelist.net/profile/Xinil",
+    "images": {
+      "jpg": { "image_url": "https://cdn.myanimelist.net/images/userimages/1.jpg" },
+      "webp": { "image_url": "https://cdn.myanimelist.net/images/userimages/1.webp" }
+    },
+    "last_online": "2026-10-28T10:00:00+00:00",
+    "gender": "Male",
+    "birthday": "1985-03-04T00:00:00+00:00",
+    "location": "California",
+    "joined": "2004-11-05T00:00:00+00:00",
+    "statistics": {
+      "anime": {
+        "days_watched": 120.5,
+        "mean_score": 7.42,
+        "watching": 3,
+        "completed": 250,
+        "on_hold": 4,
+        "dropped": 10,
+        "plan_to_watch": 30,
+        "total_entries": 297,
+        "rewatched": 5,
+        "episodes_watched": 7000
+      },
+      "manga": {
+        "days_read": 12.25,
+        "mean_score": 8.1,
+        "reading": 2,
+        "completed": 60,
+        "on_hold": 1,
+        "dropped": 3,
+        "plan_to_read": 10,
+        "total_entries": 76,
+        "reread": 0,
+        "chapters_read": 4000,
+        "volumes_read": 300
+      }
+    },
+    "external": []
+  }
+}

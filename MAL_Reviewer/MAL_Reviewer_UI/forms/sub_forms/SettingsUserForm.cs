@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using MAL_Reviewer_Core;
-using MAL_Reviewer_Core.models.UserModels;
+using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_UI.interfaces;
 
 namespace MAL_Reviewer_UI.forms.sub_forms
@@ -10,13 +10,11 @@ namespace MAL_Reviewer_UI.forms.sub_forms
     {
         #region Constructors
 
-        /// <summary>
-        /// Parameterless constructor.
-        /// </summary>
         public SettingsUserForm()
         {
             InitializeComponent();
 
+            DefaultUserTextboxControl.MaxLength = UsernameRule.MaxLength;
             this.VisibleChanged += SettingsUserForm_VisibleChanged;
         }
 
@@ -24,11 +22,6 @@ namespace MAL_Reviewer_UI.forms.sub_forms
 
         #region Private methods
 
-        /// <summary>
-        /// Handles the sub form's visibility change.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void SettingsUserForm_VisibleChanged(object sender, EventArgs e)
         {
             if (this.Visible)
@@ -37,25 +30,33 @@ namespace MAL_Reviewer_UI.forms.sub_forms
             }
         }
 
-        /// <summary>
-        /// Handles setting the default user.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void SetDefaultUserButton_Click(object sender, EventArgs e)
         {
-            string username = DefaultUserTextboxControl.InnerText.Trim();
+            string username = UsernameRule.Normalize(DefaultUserTextboxControl.InnerText);
+
+            // An empty box removes the default user.
+            if (username.Length == 0)
+            {
+                if (Core.Settings.UserSettings.DefaultUser.Length > 0
+                    && DialogResult.Yes == MessageBox.Show("Do you want to remove the default user?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
+                {
+                    Core.Settings.UserSettings.ClearDefaultUser();
+                    Core.Save();
+
+                    MessageBox.Show("The default user was removed.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                return;
+            }
 
             try
             {
-                if (username.Length < 3) throw new Exception("Input a valid username.");
-                if (username == Core.Settings.UserSettings.DefaultUser) throw new Exception($"The default user is already “{ username }”.");
-
-                Core.Settings.UserSettings.DefaultUser = username;
+                Core.Settings.UserSettings.SetDefaultUser(username);
+                Core.Save();
 
                 MessageBox.Show($"Default user set to “{ username }”.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 MessageBox.Show(ex.Message, "Notice", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
@@ -65,9 +66,6 @@ namespace MAL_Reviewer_UI.forms.sub_forms
 
         #region Public methods
 
-        /// <summary>
-        /// Displays initial information on the sub form.
-        /// </summary>
         public void InitDisplay()
         {
             DefaultUserTextboxControl.InnerText = Core.Settings.UserSettings.DefaultUser;

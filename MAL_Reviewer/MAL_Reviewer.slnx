@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/MAL_Reviewer_API.Tests/MAL_Reviewer_API.Tests.csproj" />
+    <Project Path="tests/MAL_Reviewer_Core.Tests/MAL_Reviewer_Core.Tests.csproj" />
+  </Folder>
+  <Project Path="MAL_Reviewer_API/MAL_Reviewer_API.csproj" />
+  <Project Path="MAL_Reviewer_Core/MAL_Reviewer_Core.csproj" />
+  <Project Path="MAL_Reviewer_Sandbox/MAL_Reviewer_Sandbox.csproj" />
+  <Project Path="MAL_Reviewer_UI/MAL_Reviewer_UI.csproj" />
+</Solution>

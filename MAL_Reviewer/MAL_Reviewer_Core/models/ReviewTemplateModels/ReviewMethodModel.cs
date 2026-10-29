@@ -2,7 +2,6 @@
 
 namespace MAL_Reviewer_Core.models.ReviewTemplateModels
 {
-    [Serializable]
     /// <summary>
     /// Review method model.
     /// </summary>

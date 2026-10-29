@@ -1,0 +1,15 @@
+<Project>
+  <ItemGroup>
+    <!-- Runtime -->
+    <PackageVersion Include="System.Formats.Nrbf" Version="11.0.0-rc.3.26522.148" />
+    <PackageVersion Include="System.Resources.Extensions" Version="11.0.0-rc.3.26522.148" />
+
+    <!-- Tests -->
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
+    <PackageVersion Include="RichardSzalay.MockHttp" Version="7.1.0" />
+
+    <!-- Test-only: writes legacy settings.dat payloads to test their migration. Never referenced by the app. -->
+    <PackageVersion Include="System.Runtime.Serialization.Formatters" Version="11.0.0-rc.3.26522.148" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,114 @@
+[
+  {
+    "id": 5235468,
+    "status": 1,
+    "score": 8,
+    "tags": "",
+    "is_rereading": 0,
+    "num_read_chapters": 28,
+    "num_read_volumes": 0,
+    "created_at": 1275443618,
+    "manga_title": "All Rounder Meguru",
+    "manga_english": "All Rounder Meguru",
+    "manga_num_chapters": 178,
+    "manga_num_volumes": 19,
+    "manga_publishing_status": 2,
+    "manga_id": 14090,
+    "manga_magazines": null,
+    "manga_total_members": 13317,
+    "manga_total_scores": 4167,
+    "manga_score_val": 7.67,
+    "manga_score_diff": 0.33,
+    "manga_popularity": 1939,
+    "genres": [
+      {
+        "id": 8,
+        "name": "Drama"
+      },
+      {
+        "id": 30,
+        "name": "Sports"
+      }
+    ],
+    "demographics": [
+      {
+        "id": 41,
+        "name": "Seinen"
+      }
+    ],
+    "title_localized": null,
+    "manga_url": "/manga/14090/All_Rounder_Meguru",
+    "manga_image_path": "https://cdn.myanimelist.net/r/192x272/images/manga/3/63135.jpg?s=5bfea7901bbbd4df725dc7bb40b393f7",
+    "is_added_to_list": false,
+    "manga_media_type_string": "Manga",
+    "start_date_string": "06-01-10",
+    "finish_date_string": null,
+    "manga_start_date_string": "11-25-08",
+    "manga_end_date_string": "04-12-16",
+    "days_string": 5996,
+    "retail_string": null,
+    "priority_string": "Low",
+    "notes": "",
+    "editable_notes": ""
+  },
+  {
+    "id": 34169,
+    "status": 4,
+    "score": 7,
+    "tags": "action, shounen",
+    "is_rereading": 0,
+    "num_read_chapters": 314,
+    "num_read_volumes": 0,
+    "created_at": 0,
+    "manga_title": "Bleach",
+    "manga_english": "Bleach",
+    "manga_num_chapters": 0,
+    "manga_num_volumes": 0,
+    "manga_publishing_status": 2,
+    "manga_id": 12,
+    "manga_magazines": null,
+    "manga_total_members": 434500,
+    "manga_total_scores": 264188,
+    "manga_score_val": 7.93,
+    "manga_score_diff": -0.93,
+    "manga_popularity": 15,
+    "genres": [
+      {
+        "id": 1,
+        "name": "Action"
+      },
+      {
+        "id": 2,
+        "name": "Adventure"
+      },
+      {
+        "id": 46,
+        "name": "Award Winning"
+      },
+      {
+        "id": 37,
+        "name": "Supernatural"
+      }
+    ],
+    "demographics": [
+      {
+        "id": 27,
+        "name": "Shounen"
+      }
+    ],
+    "title_localized": null,
+    "manga_url": "/manga/12/Bleach",
+    "manga_image_path": "https://cdn.myanimelist.net/r/192x272/images/manga/3/180031.jpg?s=209167587b76353f2bf643f6fae8e63f",
+    "is_added_to_list": false,
+    "manga_media_type_string": "Manga",
+    "start_date_string": "01-30-08",
+    "finish_date_string": null,
+    "manga_start_date_string": "08-07-01",
+    "manga_end_date_string": "08-22-16",
+    "days_string": 6849,
+    "retail_string": null,
+    "priority_string": "Low",
+    "notes": "",
+    "editable_notes": ""
+  }
+]

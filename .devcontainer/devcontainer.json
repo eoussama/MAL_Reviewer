@@ -1,0 +1,27 @@
+{
+  "name": "MAL Reviewer (.NET 11)",
+  "build": {
+    "dockerfile": "Containerfile",
+    "context": "."
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/src,type=bind",
+  "workspaceFolder": "/src",
+  "mounts": [
+    "source=mal-nuget,target=/root/.nuget/packages,type=volume",
+    "source=mal-dotnet-tools,target=/root/.dotnet/tools,type=volume"
+  ],
+  "remoteUser": "root",
+  "postCreateCommand": "cd MAL_Reviewer && dotnet restore MAL_Reviewer.slnx && dotnet tool restore",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp"
+      ],
+      "settings": {
+        "dotnet.defaultSolution": "MAL_Reviewer/MAL_Reviewer.slnx",
+        "dotnet.testWindow.useTestingPlatformProtocol": true
+      }
+    }
+  }
+}

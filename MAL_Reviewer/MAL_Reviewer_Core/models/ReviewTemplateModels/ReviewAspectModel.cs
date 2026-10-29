@@ -2,7 +2,6 @@
 
 namespace MAL_Reviewer_Core.models.ReviewTemplateModels
 {
-    [Serializable]
     /// <summary>
     /// The review aspect model.
     /// </summary>
@@ -28,6 +27,11 @@ namespace MAL_Reviewer_Core.models.ReviewTemplateModels
         #endregion
 
         #region Constructors
+
+        /// <summary>
+        /// Parameterless constructor.
+        /// </summary>
+        public ReviewAspectModel() { }
 
         /// <summary>
         /// Constructor with label parameter.

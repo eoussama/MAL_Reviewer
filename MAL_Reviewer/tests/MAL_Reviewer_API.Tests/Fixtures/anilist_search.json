@@ -1,0 +1,41 @@
+{
+  "data": {
+    "Page": {
+      "media": [
+        {
+          "idMal": 20,
+          "title": {
+            "romaji": "NARUTO",
+            "english": "Naruto"
+          },
+          "format": "TV",
+          "coverImage": {
+            "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx20-dE6UHbFFg1A5.jpg"
+          }
+        },
+        {
+          "idMal": 10075,
+          "title": {
+            "romaji": "NARUTO×UT",
+            "english": null
+          },
+          "format": "OVA",
+          "coverImage": {
+            "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/10075.jpg"
+          }
+        },
+        {
+          "idMal": null,
+          "title": {
+            "romaji": "NARUTO×NINKU",
+            "english": null
+          },
+          "format": "TV",
+          "coverImage": {
+            "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx162561-Uk4eZAwcmcWk.jpg"
+          }
+        }
+      ]
+    }
+  }
+}

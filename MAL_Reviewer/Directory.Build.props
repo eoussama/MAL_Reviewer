@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <Version>0.2.0</Version>
+    <Authors>Eoussama</Authors>
+    <Product>MAL Reviewer</Product>
+    <Copyright>Copyright © 2018-2026 Eoussama</Copyright>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <Deterministic>true</Deterministic>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

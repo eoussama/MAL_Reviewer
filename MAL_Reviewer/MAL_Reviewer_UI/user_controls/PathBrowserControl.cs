@@ -1,7 +1,8 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.IO;
 using System.Windows.Forms;
-using MAL_Reviewer_Core;
+using MAL_Reviewer_Core.helpers;
 
 namespace MAL_Reviewer_UI.user_controls
 {
@@ -38,6 +39,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the browser's path.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string BrowserPath
         {
             get => FolderBrowser.SelectedPath;
@@ -51,6 +53,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the browser's button text.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string BrowserText
         {
             get => PathButton.Text;
@@ -63,6 +66,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// true means it will open the folder browser.
         /// false means it will open the file explorer.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool BrowseOrOpen { get; set; } = true;
 
         #endregion
@@ -79,7 +83,7 @@ namespace MAL_Reviewer_UI.user_controls
             // Instantiating the FolderBrowser field.
             FolderBrowser = new FolderBrowserDialog
             {
-                Description = $"{Properties.Settings.Default["title"].ToString()}'s storage folder"
+                Description = $"{ AppInfo.Title }'s storage folder"
             };
         }
 

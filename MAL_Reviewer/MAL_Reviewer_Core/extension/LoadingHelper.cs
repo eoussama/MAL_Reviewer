@@ -1,4 +1,5 @@
 ﻿using MAL_Reviewer_API.models.UserModels;
+using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_Core.models.UserModels;
 
 namespace MAL_Reviewer_Core.extension
@@ -15,16 +16,16 @@ namespace MAL_Reviewer_Core.extension
         /// <param name="MALuser"></param>
         public static void Load(this UserModel @this, MALUserModel MALuser)
         {
-            @this.Username = MALuser.Username;
-            @this.Gender = MALuser.Gender;
-            @this.Location = MALuser.Location;
-            @this.About = MALuser.About;
+            @this.Username = DisplayFormat.OrUnknown(MALuser.Username);
+            @this.Gender = DisplayFormat.OrUnknown(MALuser.Gender);
+            @this.Location = DisplayFormat.OrUnknown(MALuser.Location);
+            @this.About = DisplayFormat.About(MALuser.About);
 
             @this.Birthday = MALuser.Birthday;
             @this.Joined = MALuser.Joined;
 
-            @this.Url = MALuser.Url;
-            @this.Image_url = MALuser.Image_url;
+            @this.Url = DisplayFormat.OrUnknown(MALuser.Url);
+            @this.Image_url = DisplayFormat.OrUnknown(MALuser.Image_url);
         }
     }
 }

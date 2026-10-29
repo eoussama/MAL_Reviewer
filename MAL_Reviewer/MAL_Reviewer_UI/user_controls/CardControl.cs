@@ -1,5 +1,7 @@
-﻿using System.Drawing;
+﻿using System.ComponentModel;
+using System.Drawing;
 using System.Windows.Forms;
+using MAL_Reviewer_Core.helpers;
 
 namespace MAL_Reviewer_UI.user_controls
 {
@@ -11,6 +13,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the title of the card.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Title
         {
             get => TitleLabel.Text;
@@ -20,6 +23,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the icon of the card.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Image Icon
         {
             get => IconPictureBox.Image;
@@ -29,6 +33,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the background color of the card.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Color BackgroundColor
         {
             get => this.BackColor;
@@ -41,6 +46,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the color of the card's shadow.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Color ShadowColor
         {
             get => BottomShadowPanel.BackColor;
@@ -58,6 +64,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the visibility of the card's label.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LabelVisibility
         {
             get => LabelLabel.Visible;
@@ -67,6 +74,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the text of the card's label.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string LabelText
         {
             get => LabelLabel.Text;
@@ -85,7 +93,7 @@ namespace MAL_Reviewer_UI.user_controls
         public void UpdateTooltip(string username)
         {
             LabelInfoToolTip.ToolTipTitle = $"{Title}";
-            LabelInfoToolTip.SetToolTip(LabelLabel, $"{username}'s {Title.Split(' ')[0]} list is {LabelLabel.Text.ToLower()}.");
+            LabelInfoToolTip.SetToolTip(LabelLabel, DisplayFormat.ListStateTooltip(username, Title, LabelLabel.Text));
         }
     }
 }

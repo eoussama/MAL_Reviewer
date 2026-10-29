@@ -22,7 +22,7 @@ namespace MAL_Reviewer_Core.exceptions
         /// Constuctor with message.
         /// </summary>
         /// <param name="reviewTemplateIndex"></param>
-        public InvalidReviewTemplateException(short reviewTemplateIndex) : base()
+        public InvalidReviewTemplateException(short reviewTemplateIndex) : base($"The review template with the index of { reviewTemplateIndex } doesn't exist.")
         {
             this.ReviewTemplateIndex = reviewTemplateIndex;
         }
@@ -37,7 +37,7 @@ namespace MAL_Reviewer_Core.exceptions
         /// <returns></returns>
         public override string ToString()
         {
-            return $"The review template with the index of { this.ReviewTemplateIndex } doesn't exist.";
+            return this.Message;
         }
 
         #endregion

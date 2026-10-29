@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 using MAL_Reviewer_UI.user_controls;
 using MAL_Reviewer_UI.extensions;
 using MAL_Reviewer_Core;
-using MAL_Reviewer_Core.controllers;
+using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_Core.models.ReviewTemplateModels;
 using MAL_Reviewer_API;
 using MAL_Reviewer_API.models.SearchModels;
 using MAL_Reviewer_API.models.TargetModels;
+using MAL_Reviewer_API.sources;
 
 namespace MAL_Reviewer_UI.forms
 {
@@ -22,19 +23,16 @@ namespace MAL_Reviewer_UI.forms
         #region Fields
 
         private bool
-            // Whether or not the form is ready to accept input or not.
-            ready = true,
-
-            // Whether or not the form is ready to be closed or not.
-            allow = true,
-
             // Whether or not the data has been fetched.
-            dataFetched = false;
+            dataFetched = false,
+
+            // Whether or not a target has been previewed successfully.
+            hasPreview = false;
 
         /// <summary>
-        /// The type of the search (Anime = 1, Manga = 2).
+        /// The kind of the last previewed target, (the Anime/Manga radio buttons' tag).
         /// </summary>
-        private byte type = 0;
+        private int previewKind = 0;
 
         /// <summary>
         /// The MAL id of the last previewed target.
@@ -42,14 +40,19 @@ namespace MAL_Reviewer_UI.forms
         private int targetId = 0;
 
         /// <summary>
-        /// The cancellation object.
+        /// Cancels everything when the form closes.
         /// </summary>
-        private CancellationTokenSource cts;
+        private readonly CancellationTokenSource cts;
+
+        /// <summary>
+        /// Cancels the running preview when another one starts.
+        /// </summary>
+        private CancellationTokenSource previewCts;
 
         /// <summary>
         /// The loader control.
         /// </summary>
-        private LoaderControl previewLoader;
+        private readonly LoaderControl previewLoader;
 
         #endregion
 
@@ -80,7 +83,7 @@ namespace MAL_Reviewer_UI.forms
             };
 
             // Wiring the text input events.
-            searchControl.Tag = this.type;
+            searchControl.Tag = CurrentKind();
             this.searchControl.TextboxSubmitEvent += SearchControl_TextboxSubmitEvent;
             this.searchControl.Controls["inputTextBox"].MouseClick += SearchControl_MouseClick;
             this.searchControl.Controls["inputTextBox"].TextChanged += SearchControl_TextChanged;
@@ -92,11 +95,11 @@ namespace MAL_Reviewer_UI.forms
             LoadReviewTemplates();
 
             cts = new CancellationTokenSource();
-            string target = (rbAnime.Checked ? rbAnime : rbManga).Text;
+            string target = CurrentKindName();
 
             this.ActiveControl = this.searchControl.Controls["inputTextBox"];
             this.searchControl.Placeholder = $"{ target } title...";
-            TargetNotFoundLabel.Text = $"Input the { target } title you want review on the text box above, meanwhile we will fetch any related data from MAL to help provide more information on the review target.";
+            TargetNotFoundLabel.Text = HintText(target);
         }
 
         #endregion
@@ -117,15 +120,15 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The event's arguments. </param>
         private void RbAnime_CheckedChanged(object sender, EventArgs e)
         {
-            string target = (rbAnime.Checked ? rbAnime : rbManga).Text;
+            string target = CurrentKindName();
 
             this.lTitle.Text = $"{ target } title";
             this.lPreview.Text = $"{ target } preview";
-            this.TargetNotFoundLabel.Text = $"Input the { target } title you want review on the text box above, meanwhile we will fetch any related data from MAL to help provide more information on the review target.";
+            this.TargetNotFoundLabel.Text = HintText(target);
 
             this.searchControl.Placeholder = $"{ target } title...";
-            this.searchControl.Icon = (rbAnime.Checked ? Properties.Resources.icon_anime : Properties.Resources.icon_manga);
-            this.searchControl.Tag = (byte)(rbAnime.Checked ? int.Parse(rbAnime.Tag.ToString()) : int.Parse(rbManga.Tag.ToString()));
+            this.searchControl.Icon = CurrentIcon();
+            this.searchControl.Tag = CurrentKind();
             this.searchControl.Submit();
         }
 
@@ -156,9 +159,9 @@ namespace MAL_Reviewer_UI.forms
             }
 
             // Update the template count on the group box title.
-            reviewTemplatesGroupBox.Text = $"Review templates [{ reviewTemplatesFlowPanel.Controls.Count } / { ReviewTemplatesController.MaxReviewTemplates }]";
+            reviewTemplatesGroupBox.Text = TemplateSummary.Counter(reviewTemplatesFlowPanel.Controls.Count);
         }
-        
+
         /// <summary>
         /// Populating the pSearchCards panel with ucTargetSearchCard user controls.
         /// </summary>
@@ -188,113 +191,94 @@ namespace MAL_Reviewer_UI.forms
         /// The submission of the search query.
         /// </summary>
         /// <param name="sender"> The sender. </param>
-        /// <param name="e"> The event's arguments. </param>
+        /// <param name="e"> The searched text. </param>
         private async void SearchControl_TextboxSubmitEvent(object sender, string e)
         {
+            // Reading the search kind now; the radio buttons are locked until the search ends.
+            MediaKind kind = rbAnime.Checked ? MediaKind.Anime : MediaKind.Manga;
+            string kindName = CurrentKindName();
+            bool succeeded = false;
+
+            ToggleSearchLoading(true);
+
             try
             {
-                string searchType = rbAnime.Checked ? rbAnime.Text.ToLower() : rbManga.Text.ToLower();
+                SearchResultsModel[] results = await MALHelper.Search(kind.ToPathSegment(), e, cts.Token);
 
-                ToggleSearchLoading(true);
-                this.searchControl.Tag = this.type;
-                this.ready = false;
-
-                SearchResultsModel[] searchModel = await MALHelper.Search(searchType, searchControl.InnerText.Trim(), cts.Token);
-
-                if (searchModel != null && searchModel?.Length > 0)
+                if (this.IsDisposed)
                 {
-                    int resultCount = searchModel.Length;
+                    return;
+                }
 
-                    await Task.Run(() =>
+                for (int i = 0; i < pSearchCards.Controls.Count; i++)
+                {
+                    TargetSearchCardControl searchCard = (TargetSearchCardControl)pSearchCards.Controls[i];
+
+                    // Check if the current user control is withing the range of number of results,
+                    // if yes, make it visible and update it.
+                    if (i < results.Length)
                     {
-                        Parallel.For(0, pSearchCards.Controls.Count, i =>
-                        {
-                            TargetSearchCardControl searchCard = (TargetSearchCardControl)pSearchCards.Controls[i];
+                        SearchResultsModel result = results[i];
 
-                            // Check if the current user control is withing the range of number of results,
-                            // if yes, make it visible and update it.
-                            if (i < resultCount)
-                            {
-                                SearchResultsModel resultsModel = searchModel[i];
-
-                                searchCard.Invoke((MethodInvoker)delegate
-                                {
-                                    searchCard.UpdateUI(resultsModel.Mal_id, resultsModel.Title, resultsModel.Type, resultsModel.Image_url, rbAnime.Checked ? rbAnime.Text : rbManga.Text);
-                                    searchCard.Visible = true;
-                                    searchCard.Tag = true;
-                                });
-                            }
-                            else
-                            {
-                                searchCard.Invoke((MethodInvoker)delegate
-                                {
-                                    searchCard.Visible = false;
-                                    searchCard.Tag = false;
-                                });
-                            }
-                        });
-                    });
-
-                    if (resultCount < 4)
-                    {
-                        pSearchCards.Height = pSearchCards.Controls[0].Height * resultCount;
+                        searchCard.UpdateUI(result.Mal_id, result.Title, result.Type, result.Image_url, kindName);
+                        searchCard.Visible = true;
+                        searchCard.Tag = true;
                     }
                     else
                     {
-                        pSearchCards.Height = pSearchCards.Controls[0].Height * 4;
+                        searchCard.Visible = false;
+                        searchCard.Tag = false;
                     }
+                }
 
-                    dataFetched = true;
-                    pSearchCards.Visible = true;
-                }
-                else
+                if (results.Length > 0)
                 {
-                    foreach (TargetSearchCardControl targetSearchCardControl in pSearchCards.Controls)
-                    {
-                        targetSearchCardControl.Visible = false;
-                        targetSearchCardControl.Tag = false;
-                    }
+                    pSearchCards.Height = LayoutMath.SearchPanelHeight(results.Length, pSearchCards.Controls[0].Height);
+                }
 
-                    dataFetched = false;
-                }
+                dataFetched = results.Length > 0;
+                succeeded = true;
+                TargetNotFoundLabel.Text = dataFetched ? HintText(kindName) : $"No { kindName } with that title was found on MAL.";
             }
-            catch (Exception ex)
+            catch (OperationCanceledException)
             {
-                if (this.allow)
-                {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                }
+                // The form is closing.
+                return;
             }
-            finally
+            catch (DataSourceUnavailableException ex)
             {
-                if (this.allow)
+                // Hiding the results of the previous search, which no longer match the text.
+                dataFetched = false;
+                TargetNotFoundLabel.Text = HintText(kindName);
+
+                if (!this.IsDisposed)
                 {
-                    ToggleSearchLoading(false);
-                    this.ActiveControl = this.searchControl.Controls["inputTextBox"];
-                    this.ready = true;
+                    MessageBox.Show($"The search is unavailable right now, please try again later.\n\n{ ex.Message }", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
+
+            if (this.IsDisposed)
+            {
+                return;
+            }
+
+            searchControl.CompleteSubmit(succeeded);
+            ToggleSearchLoading(false);
+            this.ActiveControl = this.searchControl.Controls["inputTextBox"];
         }
 
         /// <summary>
         /// The click on a search entry that allows previewing a target.
         /// </summary>
         /// <param name="sender"> The sender. </param>
-        /// <param name="e"> The event's arguments. </param>
+        /// <param name="targetId"> The MAL id of the clicked target. </param>
         private void SearchCard_CardMouseClickEvent(object sender, int targetId)
         {
-            var x = (rbAnime.Checked ? int.Parse(rbAnime.Tag.ToString()) : int.Parse(rbManga.Tag.ToString()));
-
             // Checking if the targetId isn't equal to the current previewed Anime/Manga's mal_id.
-            if (this.targetId == targetId && this.type == (rbAnime.Checked ? int.Parse(rbAnime.Tag.ToString()) : int.Parse(rbManga.Tag.ToString())) && pPreview.Visible)
+            if (this.targetId == targetId && this.previewKind == CurrentKind() && hasPreview && pPreview.Visible)
                 return;
 
-            pPreview.ToggleLoad(true, previewLoader);
-
-            if (rbAnime.Checked)
-                PreviewAnime(targetId);
-            else
-                PreviewManga(targetId);
+            _ = PreviewAsync(targetId, rbAnime.Checked ? MediaKind.Anime : MediaKind.Manga);
         }
 
         /// <summary>
@@ -304,26 +288,12 @@ namespace MAL_Reviewer_UI.forms
         private void ToggleSearchLoading(bool state)
         {
             searchControl.ToggleLoading(state);
-            pSearchCards.Visible = !state && (bool)pSearchCards.Controls[0].Tag == true;
+            pSearchCards.Visible = !state && dataFetched && (bool)pSearchCards.Controls[0].Tag == true;
             rbAnime.Enabled = !state;
             rbManga.Enabled = !state;
 
             // Reseting the vertical scrolling.
             pSearchCards.VerticalScroll.Value = 0;
-            // TODO scroll synopsis to top.
-
-            if (!state)
-            {
-                if (dataFetched)
-                {
-                    TargetNotFoundLabel.Text = $"Input the { (rbAnime.Checked ? rbAnime : rbManga).Text } title you want review on the text box above, meanwhile we will fetch any related data from MAL to help provide more information on the review target.";
-                }
-                else
-                {
-                    TargetNotFoundLabel.Text = $"No { ((rbAnime.Checked) ? rbAnime : rbManga).Text } with that title was found on MAL.";
-                }
-            }
-            
         }
 
         #region Search panel icon toggler
@@ -335,7 +305,7 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The event's arguments. </param>
         private void SearchControl_TextChanged(object sender, EventArgs e)
         {
-            if (searchControl.InnerText.Trim().Length < 3)
+            if (searchControl.InnerText.Trim().Length < searchControl.SubmitMin)
             {
                 pSearchCards.Visible = false;
             }
@@ -348,7 +318,7 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The event's arguments. </param>
         private void SearchControl_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left && searchControl.Controls["inputTextBox"].Focused && searchControl.InnerText.Trim().Length > 2 && (bool)pSearchCards.Controls[0].Tag == true && pSearchCards.Visible == false)
+            if (e.Button == MouseButtons.Left && searchControl.Controls["inputTextBox"].Focused && searchControl.InnerText.Trim().Length >= searchControl.SubmitMin && (bool)pSearchCards.Controls[0].Tag == true && pSearchCards.Visible == false)
             {
                 pSearchCards.Visible = true;
             }
@@ -363,7 +333,7 @@ namespace MAL_Reviewer_UI.forms
         {
             pSearchCards.Visible = false;
             searchControl.Controls["iconPictureBox"].Cursor = Cursors.Default;
-            searchControl.Icon = (rbAnime.Checked ? Properties.Resources.icon_anime : Properties.Resources.icon_manga);
+            searchControl.Icon = CurrentIcon();
         }
 
         /// <summary>
@@ -373,10 +343,10 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The event's arguments. </param>
         private void PbShow_MouseEnter(object sender, EventArgs e)
         {
-            if (searchControl.InnerText.Trim().Length > 2 && pSearchCards.Controls.Count > 0 && pSearchCards.Controls[0]?.Visible == true && pSearchCards.Visible == true)
+            if (searchControl.InnerText.Trim().Length >= searchControl.SubmitMin && pSearchCards.Controls.Count > 0 && pSearchCards.Controls[0]?.Visible == true && pSearchCards.Visible == true)
             {
                 searchControl.Controls["iconPictureBox"].Cursor = Cursors.Hand;
-                searchControl.Icon = Properties.Resources.icon_close;
+                searchControl.Icon = Icons.Close;
             }
             else
             {
@@ -389,8 +359,8 @@ namespace MAL_Reviewer_UI.forms
         /// </summary>
         /// <param name="sender"> The sender. </param>
         /// <param name="e"> The event's arguments. </param>
-        private void PbShow_MouseLeave(object sender, EventArgs e) => searchControl.Icon = (rbAnime.Checked ? Properties.Resources.icon_anime : Properties.Resources.icon_manga); 
-        
+        private void PbShow_MouseLeave(object sender, EventArgs e) => searchControl.Icon = CurrentIcon();
+
         #endregion
 
         #endregion
@@ -398,125 +368,113 @@ namespace MAL_Reviewer_UI.forms
         #region Preview section update
 
         /// <summary>
-        /// Previewing the clicked Anime.
+        /// Previews the clicked Anime or Manga. Starting a preview cancels the previous one,
+        /// so the last clicked target is the one displayed.
         /// </summary>
-        /// <param name="animeId"> The MAL id of the Anime. </param>
-        private async void PreviewAnime(int animeId)
+        /// <param name="malId"> The MAL id of the target. </param>
+        /// <param name="kind"> Whether the target is an Anime or a Manga. </param>
+        private async Task PreviewAsync(int malId, MediaKind kind)
         {
+            previewCts?.Cancel();
+            previewCts?.Dispose();
+
+            CancellationTokenSource current = CancellationTokenSource.CreateLinkedTokenSource(cts.Token);
+            previewCts = current;
+
+            pPreview.ToggleLoad(true, previewLoader);
+            pSearchCards.Visible = false;
+
+            TargetModel target = null;
+            string error = null;
+
             try
             {
-                AnimeModel animeModel = await MALHelper.GetAnime(animeId);
+                target = kind == MediaKind.Anime
+                    ? await MALHelper.GetAnime(malId, current.Token)
+                    : (TargetModel)await MALHelper.GetManga(malId, current.Token);
 
-                await Task.Run(() =>
+                if (target == null)
                 {
-                    cts.Token.ThrowIfCancellationRequested();
-
-                    if (!pPreview.IsDisposed)
-                    {
-                        pPreview.Invoke((MethodInvoker)delegate
-                        {
-                            lChapters.Visible = false;
-                            lTargetChapters.Visible = false;
-                            lVolumesEpisodes.Text = "Episodes";
-
-                            lTargetScore.Text = animeModel.Score?.ToString("0.00");
-                            lTargetRank.Text = animeModel.Rank.ToString();
-                            lTargetType.Text = animeModel.Type;
-                            lTargetStatus.Text = animeModel.Airing ? "Airing" : "Finished";
-                            lTargetVolumesEpisodes.Text = animeModel.Episodes != null ? animeModel.Episodes.ToString() : "?";
-                            lTargetTitle.Text = animeModel.Title;
-                            lTargetSynopsis.Text = animeModel.Synopsis;
-                            pbTargetImage.Load(animeModel.Image_url);
-                            MALPageButton.Tag = animeModel.Url;
-
-                            lTargetChapters.Visible = false;
-                            lChapters.Visible = false;
-
-                            InfoTooltip.ToolTipTitle = $"{ animeModel.Type } title";
-                            InfoTooltip.SetToolTip(lTargetTitle, animeModel.Title);
-
-                            this.targetId = animeModel.Mal_id;
-                            this.type = 1;
-                        });
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                if (this.allow)
-                {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    error = $"This { kind } could not be found on MAL anymore.";
                 }
             }
-            finally
+            catch (OperationCanceledException)
             {
-                if (this.allow)
-                {
-                    pPreview.ToggleLoad(false, previewLoader);
-                    pSearchCards.Visible = false;
-                    lTargetChapters.Visible = false;
-                    lChapters.Visible = false;
-                }
+                // A newer preview started, or the form is closing.
+                return;
             }
+            catch (DataSourceUnavailableException ex)
+            {
+                error = $"The preview is unavailable right now, please try again later.\n\n{ ex.Message }";
+            }
+
+            if (this.IsDisposed || current.IsCancellationRequested)
+            {
+                return;
+            }
+
+            pPreview.ToggleLoad(false, previewLoader);
+
+            if (error != null)
+            {
+                // Keeping the previous preview, or hiding the empty panel if there was none.
+                pPreview.Visible = hasPreview;
+                ShowPreviewKind(this.previewKind == int.Parse(rbManga.Tag.ToString()) ? MediaKind.Manga : MediaKind.Anime);
+                MessageBox.Show(error, "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            ShowPreview(target, kind);
         }
 
         /// <summary>
-        /// Previewing the clicked Manga.
+        /// Displays a target's information in the preview panel.
         /// </summary>
-        /// <param name="mangaId"> The MAL id of the Manga. </param>
-        private async void PreviewManga(int mangaId)
+        /// <param name="target"> The Anime or Manga. </param>
+        /// <param name="kind"> Whether the target is an Anime or a Manga. </param>
+        private void ShowPreview(TargetModel target, MediaKind kind)
         {
-            try
+            ShowPreviewKind(kind);
+
+            lTargetScore.Text = target.Score.HasValue ? DisplayFormat.Decimal(target.Score) : DisplayFormat.Unknown;
+            lTargetRank.Text = DisplayFormat.Count(target.Rank);
+            lTargetType.Text = DisplayFormat.OrUnknown(target.Type);
+            lTargetTitle.Text = target.Title;
+            lTargetSynopsis.Text = target.Synopsis;
+            _ = pbTargetImage.LoadImageAsync(target.Image_url);
+            MALPageButton.Tag = target.Url;
+
+            if (target is AnimeModel anime)
             {
-                MangaModel mangaModel = await MALHelper.GetManga(mangaId);
-
-                await Task.Run(() =>
-                {
-                    cts.Token.ThrowIfCancellationRequested();
-
-                    if (!pPreview.IsDisposed)
-                    {
-                        pPreview.Invoke((MethodInvoker)delegate
-                        {
-                            lChapters.Visible = true;
-                            lTargetChapters.Visible = true;
-                            lVolumesEpisodes.Text = "Volumes";
-
-                            lTargetScore.Text = mangaModel.Score?.ToString("0.00");
-                            lTargetRank.Text = mangaModel.Rank.ToString();
-                            lTargetType.Text = mangaModel.Type;
-                            lTargetStatus.Text = mangaModel.Publishing ? "Publishing" : "Finished";
-                            lTargetVolumesEpisodes.Text = mangaModel.Volumes != null ? mangaModel.Volumes.ToString() : "?";
-                            lTargetChapters.Text = mangaModel.Chapters != null ? mangaModel.Chapters.ToString() : "?";
-                            lTargetTitle.Text = mangaModel.Title;
-                            lTargetSynopsis.Text = mangaModel.Synopsis;
-                            pbTargetImage.Load(mangaModel.Image_url);
-                            MALPageButton.Tag = mangaModel.Url;
-
-                            InfoTooltip.ToolTipTitle = $"{ mangaModel.Type } title";
-                            InfoTooltip.SetToolTip(lTargetTitle, mangaModel.Title);
-
-                            this.targetId = mangaModel.Mal_id;
-                            this.type = 2;
-                        });
-                    }
-                });
+                lTargetStatus.Text = DisplayFormat.AnimeStatus(anime.Airing);
+                lTargetVolumesEpisodes.Text = DisplayFormat.Count(anime.Episodes);
             }
-            catch (Exception ex)
+            else if (target is MangaModel manga)
             {
-                if (this.allow)
-                {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                lTargetStatus.Text = DisplayFormat.MangaStatus(manga.Publishing);
+                lTargetVolumesEpisodes.Text = DisplayFormat.Count(manga.Volumes);
+                lTargetChapters.Text = DisplayFormat.Count(manga.Chapters);
             }
-            finally
-            {
-                if (this.allow)
-                {
-                    pSearchCards.Visible = false;
-                    pPreview.ToggleLoad(false, previewLoader);
-                }
-            }
+
+            InfoTooltip.ToolTipTitle = $"{ target.Type } title";
+            InfoTooltip.SetToolTip(lTargetTitle, target.Title);
+
+            this.targetId = target.Mal_id;
+            this.previewKind = int.Parse((kind == MediaKind.Anime ? rbAnime : rbManga).Tag.ToString());
+            this.hasPreview = true;
+        }
+
+        /// <summary>
+        /// Shows the fields that apply to the passed kind; only Manga have chapters.
+        /// </summary>
+        /// <param name="kind"> Whether the preview is of an Anime or a Manga. </param>
+        private void ShowPreviewKind(MediaKind kind)
+        {
+            bool manga = kind == MediaKind.Manga;
+
+            lChapters.Visible = manga;
+            lTargetChapters.Visible = manga;
+            lVolumesEpisodes.Text = manga ? "Volumes" : "Episodes";
         }
 
         /// <summary>
@@ -524,7 +482,7 @@ namespace MAL_Reviewer_UI.forms
         /// </summary>
         /// <param name="sender"> The sender. </param>
         /// <param name="e"> The event's arguments. </param>
-        private void BMAL_Click(object sender, EventArgs e) => System.Diagnostics.Process.Start(((Button)sender).Tag.ToString());
+        private void BMAL_Click(object sender, EventArgs e) => Shell.Open(((Button)sender).Tag);
 
         #endregion
 
@@ -537,8 +495,29 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The event's arguments. </param>
         private void ReviewButton_Click(object sender, EventArgs e)
         {
-
+            MessageBox.Show("Writing reviews is coming in a future version.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>
+        /// The tag of the selected Anime/Manga radio button.
+        /// </summary>
+        private int CurrentKind() => int.Parse((rbAnime.Checked ? rbAnime : rbManga).Tag.ToString());
+
+        /// <summary>
+        /// The text of the selected Anime/Manga radio button.
+        /// </summary>
+        private string CurrentKindName() => (rbAnime.Checked ? rbAnime : rbManga).Text;
+
+        /// <summary>
+        /// The icon of the selected Anime/Manga radio button.
+        /// </summary>
+        private System.Drawing.Image CurrentIcon() => rbAnime.Checked ? Icons.Anime : Icons.Manga;
+
+        private static string HintText(string target) => $"Input the { target } title you want review on the text box above, meanwhile we will fetch any related data from MAL to help provide more information on the review target.";
 
         #endregion
 
@@ -549,10 +528,23 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The event's arguments. </param>
         private void NewReviewForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!this.ready)
+            // Stopping any search or preview that is still running.
+            cts.Cancel();
+        }
+
+        /// <summary>
+        /// Releases the resources that are not part of the form's controls.
+        /// </summary>
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            base.OnFormClosed(e);
+
+            previewCts?.Dispose();
+            cts.Dispose();
+
+            if (!previewLoader.IsDisposed && previewLoader.Parent == null)
             {
-                cts.Cancel();
-                this.allow = false;
+                previewLoader.Dispose();
             }
         }
     }

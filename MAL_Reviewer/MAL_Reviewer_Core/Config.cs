@@ -11,9 +11,9 @@ namespace MAL_Reviewer_Core
         #region Fields
 
         /// <summary>
-        /// The default path to the storage location.
+        /// The path to the storage location.
         /// </summary>
-        public readonly string StoragePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        public readonly string StoragePath;
 
         /// <summary>
         /// The default storage folder's name.
@@ -22,12 +22,30 @@ namespace MAL_Reviewer_Core
 
         #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// The full path of the storage folder.
+        /// </summary>
+        public string StorageDirectory => Path.Combine(this.StoragePath, this.StorageFolder);
+
+        #endregion
+
         #region Constructors
 
         /// <summary>
-        /// Parameterless constructor.
+        /// Parameterless constructor, storing data in the user's application data folder.
         /// </summary>
-        public Config() { }
+        public Config() : this(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)) { }
+
+        /// <summary>
+        /// Constructor with a custom storage location.
+        /// </summary>
+        /// <param name="storagePath"> The folder that holds the storage folder. </param>
+        public Config(string storagePath)
+        {
+            this.StoragePath = storagePath;
+        }
 
         #endregion
 
@@ -38,19 +56,25 @@ namespace MAL_Reviewer_Core
         /// </summary>
         public void PrepareStorageFolder()
         {
-            if (!Directory.Exists(Path.Combine(Core.Configurations.StoragePath, Core.Configurations.StorageFolder)))
-            {
-                Directory.CreateDirectory(Path.Combine(Core.Configurations.StoragePath, Core.Configurations.StorageFolder));
-            }
+            Directory.CreateDirectory(this.StorageDirectory);
         }
 
         /// <summary>
         /// Checks if the file where the data resides exists.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="file"> The file's name. </param>
         public bool DoesStorageFileExist(string file)
         {
-            return File.Exists(Path.Combine(Core.Configurations.StoragePath, Core.Configurations.StorageFolder, file));
+            return File.Exists(GetStorageFilePath(file));
+        }
+
+        /// <summary>
+        /// Returns the full path of a file in the storage folder.
+        /// </summary>
+        /// <param name="file"> The file's name. </param>
+        public string GetStorageFilePath(string file)
+        {
+            return Path.Combine(this.StorageDirectory, file);
         }
 
         #endregion

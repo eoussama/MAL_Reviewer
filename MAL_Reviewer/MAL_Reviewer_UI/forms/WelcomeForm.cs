@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 using System.Windows.Forms;
+using MAL_Reviewer_UI.extensions;
 using MAL_Reviewer_UI.user_controls;
 using MAL_Reviewer_API.models.ListEntryModels;
 using MAL_Reviewer_API.models.UserModels;
 using MAL_Reviewer_Core;
 using MAL_Reviewer_Core.enumerations;
+using MAL_Reviewer_Core.helpers;
 
 namespace MAL_Reviewer_UI.forms
 {
@@ -19,17 +20,10 @@ namespace MAL_Reviewer_UI.forms
     {
         #region Fields
 
-        private bool
-            // Whether the Anime list is public or private.
-            animePublic = true,
-
-            // Whether the Manga list is public or private.
-            mangaPublic = true;
-
         /// <summary>
-        /// The number of loaded entries.
+        /// The text of the user button when no MAL account is loaded.
         /// </summary>
-        private short loaded = 0;
+        private readonly string loadUserText;
 
         #endregion
 
@@ -43,8 +37,9 @@ namespace MAL_Reviewer_UI.forms
             InitializeComponent();
 
             // Fetching application info.
-            lTitle.Text = Properties.Settings.Default["title"].ToString();
-            lVersion.Text = Properties.Settings.Default["version"].ToString();
+            lTitle.Text = AppInfo.Title;
+            lVersion.Text = AppInfo.Version;
+            loadUserText = bUser.Text;
 
             // Temporarely removing Animelist and Mangalist tab pages.
             tcDashboard.TabPages.Remove(tpAnimelist);
@@ -72,7 +67,7 @@ namespace MAL_Reviewer_UI.forms
         #region User Data Load
 
         /// <summary>
-        /// Handles the click that opens the user's data loading form.
+        /// Handles the click that loads a MAL account, or unloads the current one.
         /// </summary>
         /// <param name="sender"> The sender. </param>
         /// <param name="e"> The event's arguments. </param>
@@ -82,22 +77,25 @@ namespace MAL_Reviewer_UI.forms
             // if yes, opening the LoadUserForm.
             if (Core.User == null)
             {
-                LoadUserForm fLoadUser = new LoadUserForm();
-
-                fLoadUser.UserLoadedEvent += FLoadUser_UserLoadedEvent;
-                fLoadUser.ShowDialog();
+                ShowLoadUserForm(new LoadUserForm());
             }
-            // If not, informing the user of the loaded MAL account
-            // before loading another one.
-            else
+            // If not, unloading the connected MAL account.
+            else if (DialogResult.Yes == MessageBox.Show($"Do you want to unload the MAL account “{ Core.User.Username }”?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
             {
-                if (DialogResult.Yes == MessageBox.Show("A MAL user is already loaded, are you sure you want to load another one?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
-                {
-                    LoadUserForm fLoadUser = new LoadUserForm();
+                UnloadUser();
+            }
+        }
 
-                    fLoadUser.UserLoadedEvent += FLoadUser_UserLoadedEvent;
-                    fLoadUser.ShowDialog();
-                }
+        /// <summary>
+        /// Shows a user loading form and disposes it once closed.
+        /// </summary>
+        /// <param name="loadUserForm"> The form to show. </param>
+        private void ShowLoadUserForm(LoadUserForm loadUserForm)
+        {
+            using (loadUserForm)
+            {
+                loadUserForm.UserLoadedEvent += FLoadUser_UserLoadedEvent;
+                loadUserForm.ShowDialog(this);
             }
         }
 
@@ -105,28 +103,29 @@ namespace MAL_Reviewer_UI.forms
         /// Handles the event of when the user's data is loaded.
         /// </summary>
         /// <param name="sender"> The sender. </param>
-        /// <param name="e"> The event's arguments. </param>
-        private async void FLoadUser_UserLoadedEvent(object sender, MALUserModel user)
+        /// <param name="user"> The loaded user, with their lists. </param>
+        private void FLoadUser_UserLoadedEvent(object sender, MALUserModel user)
         {
-            // Resetting the loading state.
-            this.loaded = 0;
-
             // Toggling the loading UI ON.
-            LoadingUI();
+            ShowLoading();
 
-            //Updating the UI from another thread.
-            await Task.Run(async () => { 
-                await Task.WhenAll(
-                    new Task[] 
-                    {
-                        ProfileUpdateUIAsync(user),
-                        AnimeStatsUpdateUIAsync(user),
-                        MangaStatsUpdateUIAsync(user),
-                        FavoritesUpdateUIAsync(user),
-                        AnimelistUpdateIU(user.AnimeList, user),
-                        MangalistUpdateIU(user.MangaList, user)
-                    });
-            });
+            try
+            {
+                ProfileUpdateUI(user);
+                AnimeStatsUpdateUI(user.Anime_stats ?? new AnimeStatsModel());
+                MangaStatsUpdateUI(user.Manga_stats ?? new MangaStatsModel());
+                FavoritesUpdateUI(user.Favorites ?? new FavoritesModel());
+                AnimelistUpdateUI(user.AnimeList, user.Username);
+                MangalistUpdateUI(user.MangaList, user.Username);
+
+                Core.SetUser(user);
+                ShowDashboard(user.AnimeList != null, user.MangaList != null);
+            }
+            catch (Exception ex)
+            {
+                UnloadUser();
+                MessageBox.Show($"The MAL account could not be displayed.\n\n{ ex.Message }", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
@@ -141,12 +140,9 @@ namespace MAL_Reviewer_UI.forms
 
             // Checking if the username is valid.
             // If yes, automatically loading their data.
-            if (defaultUsername != string.Empty)
+            if (!string.IsNullOrWhiteSpace(defaultUsername))
             {
-                LoadUserForm loadUserForm = new LoadUserForm(defaultUsername);
-
-                loadUserForm.UserLoadedEvent += FLoadUser_UserLoadedEvent;
-                loadUserForm.ShowDialog();
+                ShowLoadUserForm(new LoadUserForm(defaultUsername));
             }
             // If not valid.
             else
@@ -156,10 +152,7 @@ namespace MAL_Reviewer_UI.forms
                 if (DialogResult.Yes == MessageBox.Show(message, $"Welcome to { lTitle.Text }", MessageBoxButtons.YesNo, MessageBoxIcon.Information))
                 {
                     // Passing true to set the inputted username as the default on.
-                    LoadUserForm loadUserForm = new LoadUserForm(true);
-
-                    loadUserForm.UserLoadedEvent += FLoadUser_UserLoadedEvent;
-                    loadUserForm.ShowDialog();
+                    ShowLoadUserForm(new LoadUserForm(true));
                 }
             }
         }
@@ -173,28 +166,28 @@ namespace MAL_Reviewer_UI.forms
         /// </summary>
         /// <param name="sender"> The sender. </param>
         /// <param name="e"> The event's arguments. </param>
-        private void BMALProfile_Click(object sender, EventArgs e) => System.Diagnostics.Process.Start(((Button)sender).Tag.ToString());
+        private void BMALProfile_Click(object sender, EventArgs e) => Shell.Open(((Button)sender).Tag);
 
         /// <summary>
         /// Redirects to the user's MAL friends page.
         /// </summary>
         /// <param name="sender"> The sender. </param>
         /// <param name="e"> The event's arguments. </param>
-        private void BMALFriends_Click(object sender, EventArgs e) => System.Diagnostics.Process.Start(((Button)sender).Tag.ToString());
+        private void BMALFriends_Click(object sender, EventArgs e) => Shell.Open(((Button)sender).Tag);
 
         /// <summary>
         /// Redirects to the user's Anime list on MAL.
         /// </summary>
         /// <param name="sender"> The sender. </param>
         /// <param name="e"> The event's arguments. </param>
-        private void BMALAnimelist_Click(object sender, EventArgs e) => System.Diagnostics.Process.Start(((Button)sender).Tag.ToString());
+        private void BMALAnimelist_Click(object sender, EventArgs e) => Shell.Open(((Button)sender).Tag);
 
         /// <summary>
         /// Redirects to the user's Manga list on MAL.
         /// </summary>
         /// <param name="sender"> The sender. </param>
         /// <param name="e"> The event's arguments. </param>
-        private void BMALMangalist_Click(object sender, EventArgs e) => System.Diagnostics.Process.Start(((Button)sender).Tag.ToString());
+        private void BMALMangalist_Click(object sender, EventArgs e) => Shell.Open(((Button)sender).Tag);
 
         #endregion
 
@@ -204,406 +197,171 @@ namespace MAL_Reviewer_UI.forms
         /// Updates the UI with the user's information.
         /// </summary>
         /// <param name="user"> The user's information object. </param>
-        /// <returns> The task it run on. </returns>
-        private async Task ProfileUpdateUIAsync(MALUserModel user)
+        private void ProfileUpdateUI(MALUserModel user)
         {
-            await Task.Run(() =>
-            {
-                tcDashboard.Invoke((MethodInvoker)delegate
-                {
-                    lUserUsername.Text = user.Username;
-                    lUserGender.Text = user.Gender;
-                    lUserJoinDate.Text = user.Joined?.ToLongDateString();
-                    lUserBirthday.Text = user.Birthday?.ToLongDateString();
-                    lUserLocation.Text = user.Location;
-                    rtbAbout.Text = (user.About == "" || user.About == null) ? "Such empty!" : user.About;
+            lUserUsername.Text = user.Username;
+            lUserGender.Text = DisplayFormat.OrUnknown(user.Gender);
+            lUserJoinDate.Text = DisplayFormat.LongDate(user.Joined);
+            lUserBirthday.Text = DisplayFormat.LongDate(user.Birthday);
+            lUserLocation.Text = DisplayFormat.OrUnknown(user.Location);
+            rtbAbout.Text = DisplayFormat.About(user.About);
 
-                    if (user.Image_url != null && user.Image_url != "")
-                    {
-                        pbUserImage.Load(user.Image_url);
-                    }
-                    else
-                    {
-                        pbUserImage.Image = Properties.Resources.icon_user;
-                    }
+            // The avatar is downloaded in the background.
+            _ = pbUserImage.LoadImageAsync(user.Image_url, Icons.User);
 
-                    ttExtendedInfo.SetToolTip(lUserUsername, user.Username);
-                    ttExtendedInfo.SetToolTip(lUserGender, user.Gender);
-                    ttExtendedInfo.SetToolTip(lUserJoinDate, user.Joined?.ToLongDateString());
-                    ttExtendedInfo.SetToolTip(lUserBirthday, user.Birthday?.ToLongDateString());
-                    ttExtendedInfo.SetToolTip(lUserLocation, user.Location);
+            ttExtendedInfo.SetToolTip(lUserUsername, lUserUsername.Text);
+            ttExtendedInfo.SetToolTip(lUserGender, lUserGender.Text);
+            ttExtendedInfo.SetToolTip(lUserJoinDate, lUserJoinDate.Text);
+            ttExtendedInfo.SetToolTip(lUserBirthday, lUserBirthday.Text);
+            ttExtendedInfo.SetToolTip(lUserLocation, lUserLocation.Text);
 
-                    bMALProfile.Tag = user.Url;
-                    bMALFriends.Tag = $"https://myanimelist.net/profile/{ user.Username }/friends";
-                    bMALAnimelist.Tag = $"https://myanimelist.net/animelist/{ user.Username }";
-                    bMALMangalist.Tag = $"https://myanimelist.net/mangalist/{ user.Username }";
-
-                    this.loaded++;
-                    LoadingUI(false);
-                });
-            });
+            bMALProfile.Tag = string.IsNullOrWhiteSpace(user.Url) ? MalUrls.Profile(user.Username) : user.Url;
+            bMALFriends.Tag = MalUrls.Friends(user.Username);
+            bMALAnimelist.Tag = MalUrls.AnimeList(user.Username);
+            bMALMangalist.Tag = MalUrls.MangaList(user.Username);
         }
 
         /// <summary>
         /// Updates the UI of Anime stats.
         /// </summary>
-        /// <param name="user"> The user's information object. </param>
-        /// <returns> The task it run on. </returns>
-        private async Task AnimeStatsUpdateUIAsync(MALUserModel user)
+        /// <param name="stats"> The user's Anime statistics. </param>
+        private void AnimeStatsUpdateUI(AnimeStatsModel stats)
         {
-            await Task.Run(() =>
-            {
-                tcDashboard.Invoke((MethodInvoker)delegate
-                {
-                    lvDashAnimeWatching.Text = user.Anime_stats.Watching.ToString();
-                    lvDashAnimeCompleted.Text = user.Anime_stats.Completed.ToString();
-                    lvDashAnimeOnHold.Text = user.Anime_stats.On_hold.ToString();
-                    lvDashAnimeDropped.Text = user.Anime_stats.Dropped.ToString();
-                    lvDashAnimePTW.Text = user.Anime_stats.Plan_to_watch.ToString();
-                    lvDashAnimeEpisodes.Text = user.Anime_stats.Episodes_watched.ToString();
-                    lvDashAnimeRewatches.Text = user.Anime_stats.Rewatched.ToString();
+            lvDashAnimeWatching.Text = DisplayFormat.Count(stats.Watching);
+            lvDashAnimeCompleted.Text = DisplayFormat.Count(stats.Completed);
+            lvDashAnimeOnHold.Text = DisplayFormat.Count(stats.On_hold);
+            lvDashAnimeDropped.Text = DisplayFormat.Count(stats.Dropped);
+            lvDashAnimePTW.Text = DisplayFormat.Count(stats.Plan_to_watch);
+            lvDashAnimeEpisodes.Text = DisplayFormat.Count(stats.Episodes_watched);
+            lvDashAnimeRewatches.Text = DisplayFormat.Count(stats.Rewatched);
 
-                    lvDashAnimeDaysWatched.Text = user.Anime_stats.Days_watched?.ToString("0.00");
-                    lvDashAnimeMeanScore.Text = user.Anime_stats.Mean_score?.ToString("0.00");
-
-                    this.loaded++;
-                    LoadingUI(false);
-                });
-            });
+            lvDashAnimeDaysWatched.Text = DisplayFormat.Decimal(stats.Days_watched);
+            lvDashAnimeMeanScore.Text = DisplayFormat.Decimal(stats.Mean_score);
         }
 
         /// <summary>
         /// Updates the UI of Manga stats.
         /// </summary>
-        /// <param name="user"> The user's information object. </param>
-        /// <returns> The task it run on. </returns>
-        private async Task MangaStatsUpdateUIAsync(MALUserModel user)
+        /// <param name="stats"> The user's Manga statistics. </param>
+        private void MangaStatsUpdateUI(MangaStatsModel stats)
         {
-            await Task.Run(() =>
-            {
-                tcDashboard.Invoke((MethodInvoker)delegate
-                {
-                    lvDashMangaReading.Text = user.Manga_stats.Reading.ToString();
-                    lvDashMangaCompleted.Text = user.Manga_stats.Completed.ToString();
-                    lvDashMangaOnHold.Text = user.Manga_stats.On_hold.ToString();
-                    lvDashMangaDropped.Text = user.Manga_stats.Dropped.ToString();
-                    lvDashMangaPTR.Text = user.Manga_stats.Plan_to_read.ToString();
-                    lvDashMangaVolumes.Text = user.Manga_stats.Volumes_read.ToString();
-                    lvDashMangaChapters.Text = user.Manga_stats.Chapters_read.ToString();
-                    lvDashMangaReread.Text = user.Manga_stats.Reread.ToString();
+            lvDashMangaReading.Text = DisplayFormat.Count(stats.Reading);
+            lvDashMangaCompleted.Text = DisplayFormat.Count(stats.Completed);
+            lvDashMangaOnHold.Text = DisplayFormat.Count(stats.On_hold);
+            lvDashMangaDropped.Text = DisplayFormat.Count(stats.Dropped);
+            lvDashMangaPTR.Text = DisplayFormat.Count(stats.Plan_to_read);
+            lvDashMangaVolumes.Text = DisplayFormat.Count(stats.Volumes_read);
+            lvDashMangaChapters.Text = DisplayFormat.Count(stats.Chapters_read);
+            lvDashMangaReread.Text = DisplayFormat.Count(stats.Reread);
 
-                    lvDashMangaDaysRead.Text = user.Manga_stats.Days_read?.ToString("0.00");
-                    lvDashMangaMeanScore.Text = user.Manga_stats.Mean_score?.ToString("0.00");
-
-                    this.loaded++;
-                    LoadingUI(false);
-                });
-            });
+            lvDashMangaDaysRead.Text = DisplayFormat.Decimal(stats.Days_read);
+            lvDashMangaMeanScore.Text = DisplayFormat.Decimal(stats.Mean_score);
         }
 
         /// <summary>
         /// Updates the UI of favorite lists.
         /// </summary>
-        /// <param name="user"> The user's information object. </param>
-        /// <returns> The task it run on. </returns>
-        private async Task FavoritesUpdateUIAsync(MALUserModel user)
+        /// <param name="favorites"> The user's favorites. </param>
+        private void FavoritesUpdateUI(FavoritesModel favorites)
         {
-            await Task.Run(() =>
+            FillFavorites(pChildAnime, lFavAnimeCount, favorites.Anime, "Anime");
+            FillFavorites(pChildManga, lFavMangaCount, favorites.Manga, "Manga");
+            FillFavorites(pChildCharacters, lFavCharactersCount, favorites.Characters, "Character");
+            FillFavorites(pChildPeople, lFavPeopleCount, favorites.People, "Person");
+        }
+
+        /// <summary>
+        /// Replaces the thumbnails of a favorites panel.
+        /// </summary>
+        /// <param name="panel"> The panel holding the thumbnails. </param>
+        /// <param name="countLabel"> The label showing the number of favorites. </param>
+        /// <param name="favorites"> The favorites, in the user's order. </param>
+        /// <param name="type"> The kind of favorites, (ex: Anime, Person). </param>
+        private void FillFavorites(Panel panel, Label countLabel, IEnumerable<FavTargetModel> favorites, string type)
+        {
+            List<FavTargetModel> items = (favorites ?? Enumerable.Empty<FavTargetModel>()).ToList();
+
+            panel.SuspendLayout();
+            panel.Controls.ClearAndDispose();
+
+            // Controls docked to the top stack upwards, so adding them backwards keeps the user's order.
+            for (int i = items.Count - 1; i >= 0; i--)
             {
-                tcDashboard.Invoke((MethodInvoker)async delegate
+                panel.Controls.Add(new FavoriteThumbControl(items[i].Name, items[i].Image_url, type)
                 {
-                    if (pChildAnime.Controls.Count > 0) pChildAnime.Controls.Clear();
-                    if (pChildManga.Controls.Count > 0) pChildManga.Controls.Clear();
-                    if (pChildCharacters.Controls.Count > 0) pChildCharacters.Controls.Clear();
-                    if (pChildPeople.Controls.Count > 0) pChildPeople.Controls.Clear();
-
-                    // Favourite Anime update.
-                    foreach (FavAnimeModel favAnimeModel in user.Favorites.Anime)
-                    {
-                        await Task.Run(() =>
-                        {
-                            pDashboard.Invoke((MethodInvoker)delegate
-                            {
-                                FavoriteThumbControl ucFavThumb = new FavoriteThumbControl(favAnimeModel.Name, favAnimeModel.Image_url, "Anime")
-                                {
-                                    Tag = favAnimeModel.Url,
-                                    Dock = DockStyle.Top
-                                };
-
-                                pChildAnime.Controls.Add(ucFavThumb);
-                            });
-                        });
-                    }
-
-                    // Favourite Manga update.
-                    foreach (FavMangaModel favMangaModel in user.Favorites.Manga)
-                    {
-                        await Task.Run(() =>
-                        {
-                            pDashboard.Invoke((MethodInvoker)delegate
-                            {
-                                FavoriteThumbControl ucFavThumb = new FavoriteThumbControl(favMangaModel.Name, favMangaModel.Image_url, "Manga")
-                                {
-                                    Tag = favMangaModel.Url,
-                                    Dock = DockStyle.Top
-                                };
-
-                                pChildManga.Controls.Add(ucFavThumb);
-                            });
-                        });
-                    }
-
-                    // Favourite characters update.
-                    foreach (FavCharactersModel favCharacterModel in user.Favorites.Characters)
-                    {
-                        await Task.Run(() =>
-                        {
-                            pDashboard.Invoke((MethodInvoker)delegate
-                            {
-                                FavoriteThumbControl ucFavThumb = new FavoriteThumbControl(favCharacterModel.Name, favCharacterModel.Image_url, "Character")
-                                {
-                                    Tag = favCharacterModel.Url,
-                                    Dock = DockStyle.Top
-                                };
-
-                                pChildCharacters.Controls.Add(ucFavThumb);
-                            });
-                        });
-                    }
-
-                    // Favourite people update.
-                    foreach (FavPeopleModel favPeopleModel in user.Favorites.People)
-                    {
-                        await Task.Run(() =>
-                        {
-                            pDashboard.Invoke((MethodInvoker)delegate
-                            {
-                                FavoriteThumbControl ucFavThumb = new FavoriteThumbControl(favPeopleModel.Name, favPeopleModel.Image_url, "Person")
-                                {
-                                    Tag = favPeopleModel.Url,
-                                    Dock = DockStyle.Top
-                                };
-
-                                pChildPeople.Controls.Add(ucFavThumb);
-                            });
-                        });
-                    }
-
-                    lFavAnimeCount.Text = user.Favorites.Anime.Length.ToString();
-                    lFavMangaCount.Text = user.Favorites.Manga.Length.ToString();
-                    lFavCharactersCount.Text = user.Favorites.Characters.Length.ToString();
-                    lFavPeopleCount.Text = user.Favorites.People.Length.ToString();
-
-                    this.loaded++;
-                    LoadingUI(false);
+                    Tag = items[i].Url,
+                    Dock = DockStyle.Top
                 });
-            });
+            }
+
+            panel.ResumeLayout();
+            countLabel.Text = items.Count.ToString();
         }
 
         /// <summary>
         /// Updates the UI of Anime list.
         /// </summary>
-        /// <param name="animeList"> The user's Anime list. </param>
-        /// <param name="user"> The user's information object. </param>
-        /// <returns> The task it run on. </returns>
-        private async Task AnimelistUpdateIU(IEnumerable<AnimelistEntryModel> animeList, MALUserModel user)
+        /// <param name="animeList"> The user's Anime list, null when it is private. </param>
+        /// <param name="username"> The user's name. </param>
+        private void AnimelistUpdateUI(IEnumerable<AnimelistEntryModel> animeList, string username)
         {
-            // Checking if the Anime list is public or private.
-            animePublic = animeList != null;
+            UpdateListState((CardControl)tlpAnimeMangaCards.Controls[0], bMALAnimelist, animeList != null, username);
 
-            if (animeList != null)
+            if (animeList == null)
             {
-                if (user.Anime_stats.Total_entries > 0)
-                {
-                    await Task.Run(() =>
-                    {
-                        void UpdateAnimeState()
-                        {
-                            ((CardControl)tlpAnimeMangaCards.Controls[0]).LabelText = "Public";
-                            ((CardControl)tlpAnimeMangaCards.Controls[0]).UpdateTooltip(user.Username);
-                            bMALAnimelist.Enabled = animePublic;
-
-                            RefreshLists(TargetType.Anime);
-
-                            ((EntryListControl)tlpAnimelistMain.Controls[0]).UpdateList(animeList.Where(a => a.Watching_status == 1).ToList());
-                            ((EntryListControl)tlpAnimelistMain.Controls[1]).UpdateList(animeList.Where(a => a.Watching_status == 2).ToList());
-                            ((EntryListControl)tlpAnimelistMain.Controls[2]).UpdateList(animeList.Where(a => a.Watching_status == 3).ToList());
-                            ((EntryListControl)tlpAnimelistMain.Controls[3]).UpdateList(animeList.Where(a => a.Watching_status == 4).ToList());
-                            ((EntryListControl)tlpAnimelistMain.Controls[4]).UpdateList(animeList.Where(a => a.Watching_status == 6).ToList());
-
-                            ResizeTable(TargetType.Anime);
-                        }
-
-                        if (tcDashboard.InvokeRequired)
-                        {
-                            tcDashboard.Invoke((MethodInvoker)delegate
-                            {
-                                UpdateAnimeState();
-                            });
-                        }
-                        else
-                        {
-                            UpdateAnimeState();
-                        }
-                    });
-                }
-                else
-                {
-                    void UpdateAnimeState()
-                    {
-                        ((CardControl)tlpAnimeMangaCards.Controls[0]).LabelText = "Public";
-                        ((CardControl)tlpAnimeMangaCards.Controls[0]).UpdateTooltip(user.Username);
-                        bMALAnimelist.Enabled = animePublic;
-
-                        RefreshLists(TargetType.Anime);
-
-                        foreach (EntryListControl entryList in tlpAnimelistMain.Controls)
-                        {
-                            entryList.ClearList();
-                        }
-
-                        ResizeTable(TargetType.Anime);
-                    }
-
-                    if (tcDashboard.InvokeRequired)
-                    {
-                        tcDashboard.Invoke((MethodInvoker)delegate
-                        {
-                            UpdateAnimeState();
-                        });
-                    }
-                    else
-                    {
-                        UpdateAnimeState();
-                    }
-                }
-            }
-            else
-            {
-                void UpdatingAnimeState()
-                {
-                    ((CardControl)tlpAnimeMangaCards.Controls[0]).LabelText = "Private";
-                    ((CardControl)tlpAnimeMangaCards.Controls[0]).UpdateTooltip(user.Username);
-                    bMALAnimelist.Enabled = animePublic;
-                };
-
-                if (tcDashboard.InvokeRequired)
-                {
-                    tcDashboard.Invoke((MethodInvoker)delegate
-                    {
-                        UpdatingAnimeState();
-                    });
-                }
-                else
-                {
-                    UpdatingAnimeState();
-                }
+                return;
             }
 
-            this.loaded++;
-            LoadingUI(false);
+            RefreshLists(TargetType.Anime);
+
+            List<AnimelistEntryModel>[] buckets = ListStatus.Split(animeList, anime => anime.Watching_status);
+
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                ((EntryListControl)tlpAnimelistMain.Controls[i]).UpdateList(buckets[i]);
+            }
+
+            ResizeTable(TargetType.Anime);
         }
 
         /// <summary>
-        /// Updates the UI of Anime list.
+        /// Updates the UI of Manga list.
         /// </summary>
-        /// <param name="mangaList"> The user's Manga list. </param>
-        /// <param name="user"> The user's information object. </param>
-        /// <returns> The task it run on. </returns>
-        private async Task MangalistUpdateIU(IEnumerable<MangalistEntryModel> mangaList, MALUserModel user)
+        /// <param name="mangaList"> The user's Manga list, null when it is private. </param>
+        /// <param name="username"> The user's name. </param>
+        private void MangalistUpdateUI(IEnumerable<MangalistEntryModel> mangaList, string username)
         {
-            // Checking if the Manga list is public or private.
-            mangaPublic = mangaList != null;
+            UpdateListState((CardControl)tlpAnimeMangaCards.Controls[1], bMALMangalist, mangaList != null, username);
 
-            if (mangaList != null)
+            if (mangaList == null)
             {
-                if (user.Manga_stats.Total_entries > 0)
-                {
-                    await Task.Run(() =>
-                    {
-                        void UpdateMangaState()
-                        {
-                            ((CardControl)tlpAnimeMangaCards.Controls[1]).LabelText = "Public";
-                            ((CardControl)tlpAnimeMangaCards.Controls[1]).UpdateTooltip(user.Username);
-                            bMALMangalist.Enabled = mangaPublic;
-
-                            RefreshLists(TargetType.Manga);
-
-                            ((EntryListControl)tlpMangalistMain.Controls[0]).UpdateList(mangaList.Where(a => a.Reading_status == 1).ToList());
-                            ((EntryListControl)tlpMangalistMain.Controls[1]).UpdateList(mangaList.Where(a => a.Reading_status == 2).ToList());
-                            ((EntryListControl)tlpMangalistMain.Controls[2]).UpdateList(mangaList.Where(a => a.Reading_status == 3).ToList());
-                            ((EntryListControl)tlpMangalistMain.Controls[3]).UpdateList(mangaList.Where(a => a.Reading_status == 4).ToList());
-                            ((EntryListControl)tlpMangalistMain.Controls[4]).UpdateList(mangaList.Where(a => a.Reading_status == 6).ToList());
-
-                            ResizeTable(TargetType.Manga);
-                        }
-
-                        if (tcDashboard.InvokeRequired)
-                        {
-                            tcDashboard.Invoke((MethodInvoker)delegate
-                            {
-                                UpdateMangaState();
-                            });
-                        }
-                        else
-                        {
-                            UpdateMangaState();
-                        }
-                    });
-                }
-                else
-                {
-                    void UpdateMangaState()
-                    {
-                        ((CardControl)tlpAnimeMangaCards.Controls[1]).LabelText = "Public";
-                        ((CardControl)tlpAnimeMangaCards.Controls[1]).UpdateTooltip(user.Username);
-                        bMALMangalist.Enabled = mangaPublic;
-
-                        RefreshLists(TargetType.Manga);
-
-                        foreach (EntryListControl entryList in tlpMangalistMain.Controls)
-                            entryList.ClearList();
-
-                        ResizeTable(TargetType.Manga);
-                    }
-
-                    if (tcDashboard.InvokeRequired)
-                    {
-                        tcDashboard.Invoke((MethodInvoker)delegate
-                        {
-                            UpdateMangaState();
-                        });
-                    }
-                    else
-                    {
-                        UpdateMangaState();
-                    }
-                }
-            }
-            else
-            {
-                void UpdatingMangaState()
-                {
-                    ((CardControl)tlpAnimeMangaCards.Controls[1]).LabelText = "Private";
-                    ((CardControl)tlpAnimeMangaCards.Controls[1]).UpdateTooltip(user.Username);
-                    bMALMangalist.Enabled = mangaPublic;
-                }
-
-                if (tcDashboard.InvokeRequired)
-                {
-                    tcDashboard.Invoke((MethodInvoker)delegate
-                    {
-                        UpdatingMangaState();
-                    });
-                }
-                else
-                {
-                    UpdatingMangaState();
-                }
+                return;
             }
 
-            this.loaded++;
-            LoadingUI(false);
+            RefreshLists(TargetType.Manga);
+
+            List<MangalistEntryModel>[] buckets = ListStatus.Split(mangaList, manga => manga.Reading_status);
+
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                ((EntryListControl)tlpMangalistMain.Controls[i]).UpdateList(buckets[i]);
+            }
+
+            ResizeTable(TargetType.Manga);
+        }
+
+        /// <summary>
+        /// Shows whether a list is public on its stats card.
+        /// </summary>
+        /// <param name="card"> The stats card. </param>
+        /// <param name="listButton"> The button that opens the list on MAL. </param>
+        /// <param name="isPublic"> Whether the list is public. </param>
+        /// <param name="username"> The user's name. </param>
+        private static void UpdateListState(CardControl card, Button listButton, bool isPublic, string username)
+        {
+            card.LabelText = isPublic ? "Public" : "Private";
+            card.UpdateTooltip(username);
+            listButton.Enabled = isPublic;
         }
 
         /// <summary>
@@ -612,26 +370,11 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="type"> The type of entry (Anime or Manga). </param>
         private void CreateLists(TargetType type)
         {
-            if (type == TargetType.Anime)
-            {
-                tlpAnimelistMain.Controls.AddRange(new EntryListControl[] {
-                    new EntryListControl("Watching", TargetType.Anime) { Dock = DockStyle.Fill },
-                    new EntryListControl("Completed", TargetType.Anime) { Dock = DockStyle.Fill },
-                    new EntryListControl("On Hold", TargetType.Anime) { Dock = DockStyle.Fill },
-                    new EntryListControl("Dropped", TargetType.Anime) { Dock = DockStyle.Fill },
-                    new EntryListControl("Plan to Watch", TargetType.Anime) { Dock = DockStyle.Fill }
-                });
-            }
-            else
-            {
-                tlpMangalistMain.Controls.AddRange(new EntryListControl[] {
-                new EntryListControl("Reading", TargetType.Manga) { Dock = DockStyle.Fill },
-                new EntryListControl("Completed", TargetType.Manga) { Dock = DockStyle.Fill },
-                new EntryListControl("On Hold", TargetType.Manga) { Dock = DockStyle.Fill },
-                new EntryListControl("Dropped", TargetType.Manga) { Dock = DockStyle.Fill },
-                new EntryListControl("Plan to Read", TargetType.Manga) { Dock = DockStyle.Fill }
-                });
-            }
+            TableLayoutPanel table = type == TargetType.Anime ? tlpAnimelistMain : tlpMangalistMain;
+
+            table.Controls.AddRange(ListStatus.Labels(type)
+                .Select(label => (Control)new EntryListControl(label, type) { Dock = DockStyle.Fill })
+                .ToArray());
         }
 
         /// <summary>
@@ -640,48 +383,21 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="type"> The type of entry (Anime or Manga). </param>
         private void RefreshLists(TargetType type)
         {
-            if (type == TargetType.Anime)
+            TableLayoutPanel table = type == TargetType.Anime ? tlpAnimelistMain : tlpMangalistMain;
+
+            table.AutoScroll = false;
+
+            table.Controls.ClearAndDispose();
+            table.RowStyles.Clear();
+
+            table.RowCount = 6;
+
+            for (int i = 0; i < table.RowCount; i++)
             {
-                #region Animelist creation
-
-                this.tlpAnimelistMain.AutoScroll = false;
-
-                tlpAnimelistMain.Controls.Clear();
-                tlpAnimelistMain.RowStyles.Clear();
-
-                this.tlpAnimelistMain.RowCount = 6;
-                this.tlpAnimelistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpAnimelistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpAnimelistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpAnimelistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpAnimelistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpAnimelistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-
-                this.tlpAnimelistMain.AutoScroll = true;
-
-                #endregion
+                table.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
             }
-            else
-            {
-                #region Mangalist creation
 
-                this.tlpMangalistMain.AutoScroll = false;
-
-                tlpMangalistMain.Controls.Clear();
-                tlpMangalistMain.RowStyles.Clear();
-
-                this.tlpMangalistMain.RowCount = 6;
-                this.tlpMangalistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpMangalistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpMangalistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpMangalistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpMangalistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-                this.tlpMangalistMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-
-                this.tlpMangalistMain.AutoScroll = true;
-
-                #endregion
-            }
+            table.AutoScroll = true;
 
             CreateLists(type);
         }
@@ -692,90 +408,97 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="type"> The type of entry (Anime or Manga). </param>
         private void ResizeTable(TargetType type)
         {
-            if (type == TargetType.Anime)
+            TableLayoutPanel table = type == TargetType.Anime ? tlpAnimelistMain : tlpMangalistMain;
+
+            for (int i = 0; i < table.RowCount; i++)
             {
-                for (int i = 0; i < tlpAnimelistMain.RowCount; i++)
+                if (i < table.Controls.Count)
                 {
-                    if (i != 5)
-                    {
-                        tlpAnimelistMain.RowStyles[i] = new RowStyle(SizeType.Absolute, ((EntryListControl)tlpAnimelistMain.Controls[i]).ListHeight + ((EntryListControl)tlpAnimelistMain.Controls[i]).Margin.Bottom);
-                    }
-                    else
-                    {
-                        tlpAnimelistMain.RowStyles[i] = new RowStyle(SizeType.Absolute, 0F);
-                    }
+                    EntryListControl list = (EntryListControl)table.Controls[i];
+                    table.RowStyles[i] = new RowStyle(SizeType.Absolute, list.ListHeight + list.Margin.Bottom);
                 }
-            }
-            else
-            {
-                for (int i = 0; i < tlpMangalistMain.RowCount; i++)
+                else
                 {
-                    if (i != 5)
-                    {
-                        tlpMangalistMain.RowStyles[i] = new RowStyle(SizeType.Absolute, ((EntryListControl)tlpMangalistMain.Controls[i]).ListHeight + ((EntryListControl)tlpMangalistMain.Controls[i]).Margin.Bottom);
-                    }
-                    else
-                    {
-                        tlpMangalistMain.RowStyles[i] = new RowStyle(SizeType.Absolute, 0F);
-                    }
-                } 
+                    table.RowStyles[i] = new RowStyle(SizeType.Absolute, 0F);
+                }
             }
         }
 
         /// <summary>
-        /// Toggles the loading UI.
+        /// Shows the loading animation in place of the dashboard.
         /// </summary>
-        /// <param name="mode"></param>
-        private void LoadingUI(bool mode = true)
+        private void ShowLoading()
         {
-            void loadingAction()
+            ResetScroll();
+
+            tcDashboard.SelectedIndex = 0;
+            tcDashboard.TabPages.Remove(tpAnimelist);
+            tcDashboard.TabPages.Remove(tpMangalist);
+
+            tlpDashboardMain.Visible = false;
+            lMALAccPreview.Visible = false;
+            pbDashBoardLoad.Visible = true;
+            bUser.Enabled = false;
+        }
+
+        /// <summary>
+        /// Shows the dashboard of the loaded user.
+        /// </summary>
+        /// <param name="animePublic"> Whether the Anime list is public. </param>
+        /// <param name="mangaPublic"> Whether the Manga list is public. </param>
+        private void ShowDashboard(bool animePublic, bool mangaPublic)
+        {
+            if (animePublic)
             {
-                tlpDashboardMain.VerticalScroll.Value = 0;
-                tlpAnimelistMain.VerticalScroll.Value = 0;
-                tlpMangalistMain.VerticalScroll.Value = 0;
-
-                if (mode)
-                {
-                    tcDashboard.SelectedIndex = 0;
-                    tcDashboard.TabPages.Remove(tpAnimelist);
-                    tcDashboard.TabPages.Remove(tpMangalist);
-
-                    tlpDashboardMain.Visible = false;
-                    lMALAccPreview.Visible = false;
-                    pbDashBoardLoad.Visible = true;
-                    bUser.Enabled = false;
-                }
-                else if (mode == false && this.loaded == 6)
-                {
-                    if (animePublic)
-                    {
-                        tcDashboard.TabPages.Add(tpAnimelist);
-                    }
-
-                    if (mangaPublic)
-                    {
-                        tcDashboard.TabPages.Add(tpMangalist);
-                    }
-
-                    bUser.Text = "Unload this MAL account";
-                    pbDashBoardLoad.Visible = false;
-                    lMALAccPreview.Visible = false;
-                    tlpDashboardMain.Visible = true;
-                    bUser.Enabled = true;
-                }
+                tcDashboard.TabPages.Add(tpAnimelist);
             }
 
-            if (pDashboard.InvokeRequired)
+            if (mangaPublic)
             {
-                pDashboard.Invoke((MethodInvoker)delegate
-                {
-                    loadingAction();
-                });
+                tcDashboard.TabPages.Add(tpMangalist);
             }
-            else
-            {
-                loadingAction();
-            }
+
+            bUser.Text = "Unload this MAL account";
+            pbDashBoardLoad.Visible = false;
+            lMALAccPreview.Visible = false;
+            tlpDashboardMain.Visible = true;
+            bUser.Enabled = true;
+            ResetScroll();
+        }
+
+        /// <summary>
+        /// Disconnects the current user and goes back to the empty dashboard.
+        /// </summary>
+        private void UnloadUser()
+        {
+            Core.UnloadUser();
+
+            ResetScroll();
+
+            tcDashboard.SelectedIndex = 0;
+            tcDashboard.TabPages.Remove(tpAnimelist);
+            tcDashboard.TabPages.Remove(tpMangalist);
+
+            pChildAnime.Controls.ClearAndDispose();
+            pChildManga.Controls.ClearAndDispose();
+            pChildCharacters.Controls.ClearAndDispose();
+            pChildPeople.Controls.ClearAndDispose();
+            RefreshLists(TargetType.Anime);
+            RefreshLists(TargetType.Manga);
+            pbUserImage.ClearImage();
+
+            bUser.Text = loadUserText;
+            pbDashBoardLoad.Visible = false;
+            tlpDashboardMain.Visible = false;
+            lMALAccPreview.Visible = true;
+            bUser.Enabled = true;
+        }
+
+        private void ResetScroll()
+        {
+            tlpDashboardMain.VerticalScroll.Value = 0;
+            tlpAnimelistMain.VerticalScroll.Value = 0;
+            tlpMangalistMain.VerticalScroll.Value = 0;
         }
 
         /// <summary>
@@ -883,13 +606,28 @@ namespace MAL_Reviewer_UI.forms
         /// </summary>
         /// <param name="sender"> The sender. </param>
         /// <param name="e"> The event's arguments. </param>
-        private void BSettings_Click(object sender, EventArgs e) => (new SettingsForm()).ShowDialog();
+        private void BSettings_Click(object sender, EventArgs e)
+        {
+            using (SettingsForm settingsForm = new SettingsForm())
+            {
+                settingsForm.ShowDialog(this);
+            }
+
+            // Persisting whatever was changed.
+            Core.Save();
+        }
 
         /// <summary>
         /// Handles the click on the new button, which opens a form for creating a new review.
         /// </summary>
         /// <param name="sender"> The sender. </param>
         /// <param name="e"> The event's arguments. </param>
-        private void BNew_Click(object sender, EventArgs e) => (new NewReviewForm()).ShowDialog();
+        private void BNew_Click(object sender, EventArgs e)
+        {
+            using (NewReviewForm newReviewForm = new NewReviewForm())
+            {
+                newReviewForm.ShowDialog(this);
+            }
+        }
     }
 }

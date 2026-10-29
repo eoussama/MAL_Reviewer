@@ -2,7 +2,6 @@
 
 namespace MAL_Reviewer_Core.models.UserModels
 {
-    [Serializable]
     /// <summary>
     /// User model.
     /// </summary>

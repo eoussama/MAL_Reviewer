@@ -1,7 +1,9 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
+using MAL_Reviewer_Core.helpers;
+using MAL_Reviewer_UI.extensions;
 
 namespace MAL_Reviewer_UI.user_controls
 {
@@ -18,7 +20,7 @@ namespace MAL_Reviewer_UI.user_controls
             InitializeComponent();
 
             // Wiring up the click event.
-            this.MouseClick += UcTargetSearchCard_MouseClick; ;
+            this.MouseClick += UcTargetSearchCard_MouseClick;
             this.pbTargetImage.MouseClick += UcTargetSearchCard_MouseClick;
             this.lTargetTitle.MouseClick += UcTargetSearchCard_MouseClick;
             this.lTargetType.MouseClick += UcTargetSearchCard_MouseClick;
@@ -38,6 +40,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <summary>
         /// Gets and sets the MAL id of the target assigned to the card.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int TargetId { get => targetId; set => targetId = value; }
 
         /// <summary>
@@ -50,14 +53,12 @@ namespace MAL_Reviewer_UI.user_controls
         /// <param name="searchType"></param>
         public void UpdateUI (int targetId, string targetTitle, string targetType, string targetImageUrl, string searchType)
         {
-            StringBuilder sb = new StringBuilder();
-
             this.TargetId = targetId;
-            lTargetTitle.Text = targetTitle.Length > 17 ? sb.Append(targetTitle.Substring(0, 17) + "...").ToString() : sb.Append(targetTitle).ToString(); sb.Clear();
-            lTargetType.Text = sb.Append(targetType).ToString(); sb.Clear();
-            pbTargetImage.Load(targetImageUrl);
+            lTargetTitle.Text = DisplayFormat.Truncate(targetTitle, 17);
+            lTargetType.Text = DisplayFormat.OrUnknown(targetType);
+            _ = pbTargetImage.LoadImageAsync(targetImageUrl);
 
-            ttTitle.ToolTipTitle = sb.Append($"{ searchType } information").ToString(); sb.Clear();
+            ttTitle.ToolTipTitle = $"{ searchType } information";
             ttTitle.SetToolTip(this, targetTitle);
             ttTitle.SetToolTip(this.lTargetTitle, targetTitle);
             ttTitle.SetToolTip(this.lTargetType, targetTitle);
