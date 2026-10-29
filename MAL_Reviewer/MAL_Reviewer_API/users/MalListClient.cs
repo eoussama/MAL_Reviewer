@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,11 +66,13 @@ namespace MAL_Reviewer_API.users
 
             return entries?.ConvertAll(entry => new AnimelistEntryModel
             {
+                Mal_id = entry.Id,
                 Title = entry.Title,
                 Url = ToAbsoluteUrl(entry.Url),
                 Image_url = entry.ImagePath,
                 Type = entry.MediaType,
                 Score = ToScore(entry.Score),
+                Tags = entry.Tags,
                 Watching_status = ToShort(entry.Status),
                 Watched_episodes = ToShort(entry.WatchedEpisodes),
                 Total_episodes = ToKnownCount(entry.TotalEpisodes)
@@ -87,11 +90,13 @@ namespace MAL_Reviewer_API.users
 
             return entries?.ConvertAll(entry => new MangalistEntryModel
             {
+                Mal_id = entry.Id,
                 Title = entry.Title,
                 Url = ToAbsoluteUrl(entry.Url),
                 Image_url = entry.ImagePath,
                 Type = entry.MediaType,
                 Score = ToScore(entry.Score),
+                Tags = entry.Tags,
                 Reading_status = ToShort(entry.Status),
                 Read_chapters = ToShort(entry.ReadChapters),
                 Read_volumes = ToShort(entry.ReadVolumes),
@@ -175,6 +180,10 @@ namespace MAL_Reviewer_API.users
 
     internal class MalListEntry
     {
+        [JsonPropertyName("tags")]
+        [JsonConverter(typeof(TextConverter))]
+        public string Tags { get; set; }
+
         [JsonPropertyName("status")]
         public int? Status { get; set; }
 
@@ -184,7 +193,11 @@ namespace MAL_Reviewer_API.users
 
     internal class MalAnimeEntry : MalListEntry
     {
+        [JsonPropertyName("anime_id")]
+        public int? Id { get; set; }
+
         [JsonPropertyName("anime_title")]
+        [JsonConverter(typeof(TextConverter))]
         public string Title { get; set; }
 
         [JsonPropertyName("anime_url")]
@@ -205,7 +218,11 @@ namespace MAL_Reviewer_API.users
 
     internal class MalMangaEntry : MalListEntry
     {
+        [JsonPropertyName("manga_id")]
+        public int? Id { get; set; }
+
         [JsonPropertyName("manga_title")]
+        [JsonConverter(typeof(TextConverter))]
         public string Title { get; set; }
 
         [JsonPropertyName("manga_url")]
@@ -228,6 +245,31 @@ namespace MAL_Reviewer_API.users
 
         [JsonPropertyName("manga_num_volumes")]
         public int? TotalVolumes { get; set; }
+    }
+
+    /// <summary>
+    /// Reads text that MyAnimeList may send as a number, (a title or tags made of digits only, like the Anime "86").
+    /// </summary>
+    internal class TextConverter : JsonConverter<string>
+    {
+        public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.String:
+                    return reader.GetString();
+                case JsonTokenType.Number:
+                    return System.Text.Encoding.UTF8.GetString(reader.ValueSpan);
+                default:
+                    reader.Skip();
+                    return null;
+            }
+        }
+
+        public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value);
+        }
     }
 
     #endregion

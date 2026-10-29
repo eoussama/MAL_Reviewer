@@ -178,18 +178,51 @@ namespace MAL_Reviewer_Core
             string path = this.config.GetStorageFilePath(StorageFile);
             string temporaryPath = path + ".tmp";
 
-            SettingsDocument document = new SettingsDocument
-            {
-                FormatVersion = FormatVersion,
-                User = this.UserSettings,
-                ReviewTemplates = this.ReviewTemplatesSettings.ReviewTemplates,
-                Search = this.SearchSettings,
-                Theme = this.ThemeSettings
-            };
-
             // Writing next to the target first, so an interrupted save never leaves a half-written file.
-            File.WriteAllText(temporaryPath, JsonSerializer.Serialize(document, JsonOptions));
+            File.WriteAllText(temporaryPath, JsonSerializer.Serialize(CreateDocument(), JsonOptions));
             File.Move(temporaryPath, path, true);
+        }
+
+        /// <summary>
+        /// Writes a copy of the settings to a file, which <see cref="ImportSettings(string)"/> can read back.
+        /// </summary>
+        /// <param name="path"> The file to write. </param>
+        public void ExportSettings(string path)
+        {
+            File.WriteAllText(path, JsonSerializer.Serialize(CreateDocument(), JsonOptions));
+        }
+
+        /// <summary>
+        /// Replaces the settings with those of an exported file, and saves them.
+        /// Missing or unreadable parts are repaired like when the settings file is loaded.
+        /// </summary>
+        /// <param name="path"> The exported file. </param>
+        /// <exception cref="InvalidDataException"> When the file isn't exported settings; the current settings are kept. </exception>
+        public void ImportSettings(string path)
+        {
+            SettingsDocument document;
+
+            try
+            {
+                document = JsonSerializer.Deserialize<SettingsDocument>(File.ReadAllText(path), JsonOptions);
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidDataException("The file isn't readable settings of MAL Reviewer.", ex);
+            }
+
+            if (document == null || document.FormatVersion < 1)
+            {
+                throw new InvalidDataException("The file isn't settings exported by MAL Reviewer.");
+            }
+
+            if (document.FormatVersion > FormatVersion)
+            {
+                throw new InvalidDataException("The settings were exported by a newer version of MAL Reviewer.");
+            }
+
+            Apply(document);
+            SaveSettings();
         }
 
         /// <summary>
@@ -232,6 +265,18 @@ namespace MAL_Reviewer_Core
         #endregion
 
         #region Private methods
+
+        private SettingsDocument CreateDocument()
+        {
+            return new SettingsDocument
+            {
+                FormatVersion = FormatVersion,
+                User = this.UserSettings,
+                ReviewTemplates = this.ReviewTemplatesSettings.ReviewTemplates,
+                Search = this.SearchSettings,
+                Theme = this.ThemeSettings
+            };
+        }
 
         private void ClearAndSeed()
         {

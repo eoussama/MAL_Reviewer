@@ -54,6 +54,11 @@ namespace MAL_Reviewer_Core
         public static UserCache UserCache { get; private set; }
 
         /// <summary>
+        /// The data of the connected MAL user, with their lists.
+        /// </summary>
+        public static MALUserModel UserData => loadedUser;
+
+        /// <summary>
         /// When the data of the connected MAL user was fetched from MAL.
         /// </summary>
         public static DateTimeOffset? UserFetchedAt { get; private set; }

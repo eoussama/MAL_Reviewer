@@ -81,6 +81,9 @@ An unreadable settings file is set aside as `settings.corrupt-<date>.json` and t
 The default MAL user is loaded when the app starts, which can be turned off in **Settings → User**.
 Their data is kept in `user.json` next to the settings, and shown when MAL can't be reached at start.
 
+**Settings → General** exports the settings to a file and imports them back, and exports the loaded user's Anime and Manga lists,
+either as MAL XML (the format of MyAnimeList's own export, which MyAnimeList and AniList can import) or as CSV for spreadsheets.
+
 The theme (light, dark or custom colors) is picked in **Settings → Theme** and applies right away.
 The forms are designed with the light colors; `MAL_Reviewer_UI/theming/Theme.cs` swaps each of them for the theme's color of the same role (see `MAL_Reviewer_Core/helpers/ThemeMap.cs`).
 

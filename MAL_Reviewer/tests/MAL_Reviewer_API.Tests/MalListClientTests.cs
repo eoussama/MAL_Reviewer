@@ -44,6 +44,8 @@ namespace MAL_Reviewer_API.Tests
             Assert.Equal((byte)9, onePiece.Score);
             Assert.Equal((short)1, onePiece.Watching_status);
             Assert.Equal((short)623, onePiece.Watched_episodes);
+            Assert.Equal(21, onePiece.Mal_id);
+            Assert.Equal("action, adventure, pirates, comedy", onePiece.Tags);
             Assert.Null(onePiece.Total_episodes);
 
             Assert.Equal((short)2, list[1].Watching_status);
@@ -63,6 +65,8 @@ namespace MAL_Reviewer_API.Tests
 
             Assert.Equal(2, list.Count);
             Assert.Equal("All Rounder Meguru", list[0].Title);
+            Assert.Equal(14090, list[0].Mal_id);
+            Assert.Equal("", list[0].Tags);
             Assert.Equal((short)28, list[0].Read_chapters);
             Assert.Equal((short)0, list[0].Read_volumes);
             Assert.Equal((short)178, list[0].Total_chapters);
@@ -72,6 +76,26 @@ namespace MAL_Reviewer_API.Tests
             Assert.Equal((short)4, list[1].Reading_status);
             Assert.Null(list[1].Total_chapters);
             Assert.Null(list[1].Total_volumes);
+        }
+
+        [Fact]
+        public async Task GetLists_ReadTitlesAndTagsSentAsNumbers()
+        {
+            MockHttpMessageHandler mock = new MockHttpMessageHandler();
+            mock.When(TestSupport.MalUrl + "animelist/u/load.json").Respond("application/json", "[{\"status\":2,\"anime_id\":41457,\"anime_title\":86,\"tags\":2021}]");
+            mock.When(TestSupport.MalUrl + "mangalist/u/load.json").Respond("application/json", "[{\"status\":1,\"manga_id\":1,\"manga_title\":1.5,\"tags\":null},{\"status\":1,\"manga_title\":{\"x\":[1]},\"tags\":true}]");
+
+            List<AnimelistEntryModel> anime = await Client(mock).GetAnimeListAsync("u", TestContext.Current.CancellationToken);
+            List<MangalistEntryModel> manga = await Client(mock).GetMangaListAsync("u", TestContext.Current.CancellationToken);
+
+            Assert.Equal("86", anime.Single().Title);
+            Assert.Equal("2021", anime.Single().Tags);
+            Assert.Equal(41457, anime.Single().Mal_id);
+            Assert.Equal("1.5", manga[0].Title);
+            Assert.Null(manga[0].Tags);
+            Assert.Null(manga[1].Title);
+            Assert.Null(manga[1].Tags);
+            Assert.Null(manga[1].Mal_id);
         }
 
         [Fact]

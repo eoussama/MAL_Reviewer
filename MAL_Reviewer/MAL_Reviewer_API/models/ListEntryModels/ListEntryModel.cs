@@ -6,6 +6,11 @@ namespace MAL_Reviewer_API.models.ListEntryModels
     public class ListEntryModel
     {
         /// <summary>
+        /// The id of the entry on MAL.
+        /// </summary>
+        public int? Mal_id { get; set; }
+
+        /// <summary>
         /// The title of a given entry; (Anime/Manga).
         /// </summary>
         public string Title { get; set; }
@@ -29,5 +34,10 @@ namespace MAL_Reviewer_API.models.ListEntryModels
         /// The score of the entry in MAL.
         /// </summary>
         public byte? Score { get; set; }
+
+        /// <summary>
+        /// The user's tags for the entry, separated by commas.
+        /// </summary>
+        public string Tags { get; set; }
     }
 }
