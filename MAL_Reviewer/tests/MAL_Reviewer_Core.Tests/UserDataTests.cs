@@ -272,3 +272,118 @@ namespace MAL_Reviewer_Core.Tests
         }
     }
 }
+
+namespace MAL_Reviewer_Core.Tests
+{
+    public class RecentUsersTests
+    {
+        private static readonly DateTimeOffset Now = new DateTimeOffset(2026, 10, 30, 10, 0, 0, TimeSpan.Zero);
+
+        [Fact]
+        public void LoadedUsers_AreRemembered_MostRecentFirst_OnceEach()
+        {
+            UserController settings = new UserController();
+
+            Assert.True(settings.RememberUser("Xinil", "https://cdn/x.jpg", Now));
+            Assert.True(settings.RememberUser("  Someone ", null, Now.AddMinutes(1)));
+            Assert.True(settings.RememberUser("xinil", null, Now.AddMinutes(2)));
+
+            Assert.Equal(new[] { "xinil", "Someone" }, settings.RecentUsers.Select(user => user.Username));
+            Assert.Equal(Now.AddMinutes(2), settings.RecentUsers[0].LoadedAt);
+            Assert.Null(settings.RecentUsers[0].ImageUrl);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("a")]
+        [InlineData("not a name!")]
+        public void InvalidNames_AreNotRemembered(string username)
+        {
+            UserController settings = new UserController();
+
+            Assert.False(settings.RememberUser(username, null, Now));
+            Assert.Empty(settings.RecentUsers);
+        }
+
+        [Fact]
+        public void OnlyTheMostRecentUsers_AreKept()
+        {
+            UserController settings = new UserController();
+
+            for (int i = 0; i < UserController.MaxRecentUsers + 3; i++)
+            {
+                settings.RememberUser($"user{ i }", null, Now.AddMinutes(i));
+            }
+
+            Assert.Equal(UserController.MaxRecentUsers, settings.RecentUsers.Count);
+            Assert.Equal($"user{ UserController.MaxRecentUsers + 2 }", settings.RecentUsers[0].Username);
+            Assert.Equal("user3", settings.RecentUsers.Last().Username);
+        }
+
+        [Fact]
+        public void FindRecentUsers_PutsNamesStartingWithTheSearchFirst()
+        {
+            UserController settings = new UserController();
+            settings.RememberUser("Kuroneko", null, Now);
+            settings.RememberUser("NekoChan", null, Now);
+            settings.RememberUser("Xinil", null, Now);
+            settings.RememberUser("AnotherNeko", null, Now);
+
+            Assert.Equal(new[] { "NekoChan", "AnotherNeko", "Kuroneko" }, settings.FindRecentUsers(" neko ").Select(user => user.Username));
+            Assert.Equal(4, settings.FindRecentUsers("").Count);
+            Assert.Equal(4, settings.FindRecentUsers(null).Count);
+            Assert.Empty(settings.FindRecentUsers("zzz"));
+        }
+
+        [Fact]
+        public void ForgetAndReset_RemoveUsers()
+        {
+            UserController settings = new UserController();
+            settings.RememberUser("Xinil", null, Now);
+            settings.RememberUser("Someone", null, Now);
+
+            settings.ForgetUser(" XINIL ");
+            Assert.Equal("Someone", settings.RecentUsers.Single().Username);
+
+            settings.ResetSettings();
+            Assert.Empty(settings.RecentUsers);
+
+            settings.RecentUsers = null;
+            Assert.NotNull(settings.RecentUsers);
+        }
+
+        [Fact]
+        public void RecentUsers_AreSaved_AndRepairedWhenLoaded()
+        {
+            using (TempStorage storage = new TempStorage())
+            {
+                Settings saved = new Settings(storage.Config);
+                saved.UserSettings.RememberUser("Xinil", "https://cdn/x.jpg", Now);
+                saved.SaveSettings();
+
+                string json = File.ReadAllText(storage.File(Settings.StorageFile));
+                Assert.Contains("\"recentUsers\"", json);
+                Assert.Contains("\"imageUrl\": \"https://cdn/x.jpg\"", json);
+
+                Settings loaded = new Settings(storage.Config);
+                loaded.LoadSettings();
+                Assert.Equal(Now, loaded.UserSettings.RecentUsers.Single().LoadedAt);
+
+                string users = string.Join(",", Enumerable.Range(0, 12).Select(i => $"{{\"username\":\"user{ i }\"}}"));
+                File.WriteAllText(storage.File(Settings.StorageFile), $"{{\"formatVersion\":1,\"user\":{{\"recentUsers\":[null,{{\"username\":\"!\"}},{{}},{ users }]}}}}");
+
+                Settings repaired = new Settings(storage.Config);
+                Assert.Equal(SettingsLoadResult.Loaded, repaired.LoadSettings());
+                Assert.Equal(UserController.MaxRecentUsers, repaired.UserSettings.RecentUsers.Count);
+                Assert.Equal("user0", repaired.UserSettings.RecentUsers[0].Username);
+
+                File.WriteAllText(storage.File(Settings.StorageFile), "{\"formatVersion\":1,\"user\":{\"recentUsers\":null}}");
+
+                Settings empty = new Settings(storage.Config);
+                empty.LoadSettings();
+                Assert.Empty(empty.UserSettings.RecentUsers);
+            }
+        }
+    }
+}

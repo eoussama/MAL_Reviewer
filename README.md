@@ -80,6 +80,7 @@ An unreadable settings file is set aside as `settings.corrupt-<date>.json` and t
 
 The default MAL user is loaded when the app starts, which can be turned off in **Settings → User**.
 Their data is kept in `user.json` next to the settings, and shown when MAL can't be reached at start.
+The last 10 loaded users are listed under the username box of the loading window, to load them again with a click.
 
 **Settings → General** exports the settings to a file and imports them back, and exports the loaded user's Anime and Manga lists,
 either as MAL XML (the format of MyAnimeList's own export, which MyAnimeList and AniList can import) or as CSV for spreadsheets.

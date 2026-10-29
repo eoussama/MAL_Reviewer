@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MAL_Reviewer_Core.controllers;
+using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_Core.interfaces;
 using MAL_Reviewer_Core.migration;
 using MAL_Reviewer_Core.models.ReviewTemplateModels;
@@ -295,6 +297,10 @@ namespace MAL_Reviewer_Core
         {
             this.UserSettings = document.User ?? new UserController();
             this.UserSettings.DefaultUser ??= string.Empty;
+            this.UserSettings.RecentUsers = this.UserSettings.RecentUsers
+                .Where(user => user != null && UsernameRule.IsValid(UsernameRule.Normalize(user.Username)))
+                .Take(UserController.MaxRecentUsers)
+                .ToList();
 
             List<ReviewTemplateModel> templates = document.ReviewTemplates ?? new List<ReviewTemplateModel>();
             templates.RemoveAll(template => template == null);
