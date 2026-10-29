@@ -31,6 +31,9 @@
             this.contentPanel = new System.Windows.Forms.Panel();
             this.DefaultUserLabel = new System.Windows.Forms.Label();
             this.DefaultUserPanel = new System.Windows.Forms.Panel();
+            this.StartLabel = new System.Windows.Forms.Label();
+            this.LoadOnStartCheckBox = new System.Windows.Forms.CheckBox();
+            this.OfflineHintLabel = new System.Windows.Forms.Label();
             this.SetDefaultUserButton = new System.Windows.Forms.Button();
             this.linePanel = new System.Windows.Forms.Panel();
             this.titleLabel = new System.Windows.Forms.Label();
@@ -49,6 +52,9 @@
             this.contentPanel.BackColor = System.Drawing.Color.Transparent;
             this.contentPanel.Controls.Add(this.DefaultUserLabel);
             this.contentPanel.Controls.Add(this.DefaultUserPanel);
+            this.contentPanel.Controls.Add(this.StartLabel);
+            this.contentPanel.Controls.Add(this.LoadOnStartCheckBox);
+            this.contentPanel.Controls.Add(this.OfflineHintLabel);
             this.contentPanel.Location = new System.Drawing.Point(12, 94);
             this.contentPanel.Name = "contentPanel";
             this.contentPanel.Size = new System.Drawing.Size(512, 366);
@@ -77,6 +83,39 @@
             this.DefaultUserPanel.Name = "DefaultUserPanel";
             this.DefaultUserPanel.Size = new System.Drawing.Size(494, 42);
             this.DefaultUserPanel.TabIndex = 20;
+            // 
+            // StartLabel
+            // 
+            this.StartLabel.AutoSize = true;
+            this.StartLabel.Font = new System.Drawing.Font("Bahnschrift", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.StartLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.StartLabel.Location = new System.Drawing.Point(4, 82);
+            this.StartLabel.Name = "StartLabel";
+            this.StartLabel.Size = new System.Drawing.Size(146, 19);
+            this.StartLabel.TabIndex = 24;
+            this.StartLabel.Text = "When the app starts";
+            // 
+            // LoadOnStartCheckBox
+            // 
+            this.LoadOnStartCheckBox.AutoSize = true;
+            this.LoadOnStartCheckBox.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.LoadOnStartCheckBox.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.LoadOnStartCheckBox.Location = new System.Drawing.Point(9, 108);
+            this.LoadOnStartCheckBox.Name = "LoadOnStartCheckBox";
+            this.LoadOnStartCheckBox.Size = new System.Drawing.Size(300, 17);
+            this.LoadOnStartCheckBox.TabIndex = 25;
+            this.LoadOnStartCheckBox.Text = "Load the default user, (or ask for one when there is none)";
+            this.LoadOnStartCheckBox.UseVisualStyleBackColor = true;
+            this.LoadOnStartCheckBox.CheckedChanged += new System.EventHandler(this.LoadOnStartCheckBox_CheckedChanged);
+            // 
+            // OfflineHintLabel
+            // 
+            this.OfflineHintLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.OfflineHintLabel.Location = new System.Drawing.Point(6, 132);
+            this.OfflineHintLabel.Name = "OfflineHintLabel";
+            this.OfflineHintLabel.Size = new System.Drawing.Size(490, 30);
+            this.OfflineHintLabel.TabIndex = 26;
+            this.OfflineHintLabel.Text = "The default user's data is kept on this computer, for starts when MAL can't be reached.";
             // 
             // SetDefaultUserButton
             // 
@@ -181,5 +220,8 @@
         private System.Windows.Forms.Panel DefaultUserPanel;
         private System.Windows.Forms.Label DefaultUserLabel;
         private user_controls.TextboxControl DefaultUserTextboxControl;
+        private System.Windows.Forms.Label StartLabel;
+        private System.Windows.Forms.CheckBox LoadOnStartCheckBox;
+        private System.Windows.Forms.Label OfflineHintLabel;
     }
 }

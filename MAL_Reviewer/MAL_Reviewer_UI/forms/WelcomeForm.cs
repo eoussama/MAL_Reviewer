@@ -117,6 +117,9 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="user"> The loaded user, with their lists. </param>
         private void FLoadUser_UserLoadedEvent(object sender, MALUserModel user)
         {
+            // Whether the user is shown from their saved data, since MAL couldn't be reached.
+            DateTimeOffset? savedAt = (sender as LoadUserForm)?.SavedAt;
+
             // Toggling the loading UI ON.
             ShowLoading();
 
@@ -129,13 +132,37 @@ namespace MAL_Reviewer_UI.forms
                 AnimelistUpdateUI(user.AnimeList, user.Username);
                 MangalistUpdateUI(user.MangaList, user.Username);
 
-                Core.SetUser(user);
+                Core.SetUser(user, savedAt);
                 ShowDashboard(user.AnimeList != null, user.MangaList != null);
             }
             catch (Exception ex)
             {
                 UnloadUser();
                 MessageBox.Show($"The MAL account could not be displayed.\n\n{ ex.Message }", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            SaveUserData();
+
+            if (savedAt.HasValue)
+            {
+                MessageBox.Show($"MAL can't be reached right now, so the data of “{ user.Username }” saved on { savedAt.Value.LocalDateTime:f} is shown.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        /// <summary>
+        /// Saves the default user's data, so it can be shown when MAL can't be reached.
+        /// Failing to save it doesn't stop the user from being shown; it's tried again when the application closes.
+        /// </summary>
+        private static void SaveUserData()
+        {
+            try
+            {
+                Core.SaveUserData();
+            }
+            catch (Exception ex) when (ex is System.IO.IOException || ex is UnauthorizedAccessException)
+            {
+                // Nothing more to do here.
             }
         }
 
@@ -146,6 +173,12 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The event's arguments. </param>
         private void WelcomeForm_Load(object sender, EventArgs e)
         {
+            // Loading nothing when turned off in the user settings.
+            if (!Core.Settings.UserSettings.LoadOnStart)
+            {
+                return;
+            }
+
             // Getting the default user's name.
             string defaultUsername = Core.Settings.UserSettings.DefaultUser;
 
@@ -158,7 +191,7 @@ namespace MAL_Reviewer_UI.forms
             // If not valid.
             else
             {
-                string message = "No default MAL username was found, would you like to input yours now?\n\nProviding your MAL username now will save you the trouble of loading it manually every time you open this application.\n\nThe default username can be changed any time in the user's settings.";
+                string message = "No default MAL username was found, would you like to input yours now?\n\nProviding your MAL username now will save you the trouble of loading it manually every time you open this application.\n\nThe default username can be changed any time in the user's settings, where this question can also be turned off.";
 
                 if (DialogResult.Yes == MessageBox.Show(message, $"Welcome to { lTitle.Text }", MessageBoxButtons.YesNo, MessageBoxIcon.Information))
                 {

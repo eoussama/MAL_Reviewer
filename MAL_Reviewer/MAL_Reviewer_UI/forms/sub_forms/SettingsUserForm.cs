@@ -8,6 +8,15 @@ namespace MAL_Reviewer_UI.forms.sub_forms
 {
     public partial class SettingsUserForm : Form, ISubForm
     {
+        #region Fields
+
+        /// <summary>
+        /// Set while the controls are filled from the settings, so filling them isn't taken as a change.
+        /// </summary>
+        private bool displaying = false;
+
+        #endregion
+
         #region Constructors
 
         public SettingsUserForm()
@@ -38,7 +47,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
             if (username.Length == 0)
             {
                 if (Core.Settings.UserSettings.DefaultUser.Length > 0
-                    && DialogResult.Yes == MessageBox.Show("Do you want to remove the default user?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
+                    && DialogResult.Yes == MessageBox.Show("Do you want to remove the default user, along with their saved data?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
                 {
                     Core.Settings.UserSettings.ClearDefaultUser();
                     Core.Save();
@@ -62,9 +71,17 @@ namespace MAL_Reviewer_UI.forms.sub_forms
             }
         }
 
+        private void LoadOnStartCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!this.displaying)
+            {
+                Core.Settings.UserSettings.LoadOnStart = LoadOnStartCheckBox.Checked;
+            }
+        }
+
         private void UserSettingsResetButton_Click(object sender, EventArgs e)
         {
-            if (DialogResult.Yes == MessageBox.Show("Are you sure you want to reset the user settings?\nThe default user will be removed.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
+            if (DialogResult.Yes == MessageBox.Show("Are you sure you want to reset the user settings?\nThe default user and their saved data will be removed.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
             {
                 Core.Settings.UserSettings.ResetSettings();
                 Core.Save();
@@ -81,7 +98,12 @@ namespace MAL_Reviewer_UI.forms.sub_forms
 
         public void InitDisplay()
         {
+            this.displaying = true;
+
             DefaultUserTextboxControl.InnerText = Core.Settings.UserSettings.DefaultUser;
+            LoadOnStartCheckBox.Checked = Core.Settings.UserSettings.LoadOnStart;
+
+            this.displaying = false;
         }
 
         #endregion

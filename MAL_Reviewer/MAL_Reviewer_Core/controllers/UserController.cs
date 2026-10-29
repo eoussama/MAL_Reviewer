@@ -16,6 +16,11 @@ namespace MAL_Reviewer_Core.controllers
         /// </summary>
         public string DefaultUser { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Whether the default user's MAL account is loaded when the application starts.
+        /// </summary>
+        public bool LoadOnStart { get; set; } = true;
+
         #endregion
 
         #region Constructors
@@ -73,6 +78,7 @@ namespace MAL_Reviewer_Core.controllers
         public void SeedSettings()
         {
             DefaultUser = string.Empty;
+            LoadOnStart = true;
         }
 
         #endregion

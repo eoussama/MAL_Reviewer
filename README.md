@@ -78,6 +78,9 @@ Settings are stored in `%APPDATA%\MAL_Reviewer\settings.json`.
 Settings saved by versions before 0.2.0 (`settings.dat`) are converted on the first start, and the old file is kept as `settings.dat.migrated`.
 An unreadable settings file is set aside as `settings.corrupt-<date>.json` and the defaults are used instead.
 
+The default MAL user is loaded when the app starts, which can be turned off in **Settings → User**.
+Their data is kept in `user.json` next to the settings, and shown when MAL can't be reached at start.
+
 The theme (light, dark or custom colors) is picked in **Settings → Theme** and applies right away.
 The forms are designed with the light colors; `MAL_Reviewer_UI/theming/Theme.cs` swaps each of them for the theme's color of the same role (see `MAL_Reviewer_Core/helpers/ThemeMap.cs`).
 

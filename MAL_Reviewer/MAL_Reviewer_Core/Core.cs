@@ -1,7 +1,9 @@
-﻿using MAL_Reviewer_API;
+﻿using System;
+using MAL_Reviewer_API;
 using MAL_Reviewer_API.models.UserModels;
 using MAL_Reviewer_Core.extension;
 using MAL_Reviewer_Core.models.UserModels;
+using MAL_Reviewer_Core.services;
 
 namespace MAL_Reviewer_Core
 {
@@ -10,6 +12,20 @@ namespace MAL_Reviewer_Core
     /// </summary>
     public static class Core
     {
+        #region Fields
+
+        /// <summary>
+        /// The data of the connected MAL user, as fetched.
+        /// </summary>
+        private static MALUserModel loadedUser;
+
+        /// <summary>
+        /// Whether the data of the connected MAL user is already saved.
+        /// </summary>
+        private static bool loadedUserSaved;
+
+        #endregion
+
         #region Properties
 
         /// <summary>
@@ -32,6 +48,16 @@ namespace MAL_Reviewer_Core
         /// </summary>
         public static SettingsLoadResult LoadResult { get; private set; }
 
+        /// <summary>
+        /// The saved data of the default MAL user, shown when MAL can't be reached.
+        /// </summary>
+        public static UserCache UserCache { get; private set; }
+
+        /// <summary>
+        /// When the data of the connected MAL user was fetched from MAL.
+        /// </summary>
+        public static DateTimeOffset? UserFetchedAt { get; private set; }
+
         #endregion
 
         #region Public methods
@@ -46,7 +72,8 @@ namespace MAL_Reviewer_Core
             // Instantiation
             Configurations = configurations ?? new Config();
             Settings = new Settings(Configurations);
-            User = null;
+            UserCache = new UserCache(Configurations);
+            UnloadUser();
 
             // Loading the data.
             Load();
@@ -69,6 +96,9 @@ namespace MAL_Reviewer_Core
         {
             // Saving the settings, (the storage folder is created if it doesn't exist).
             Settings?.SaveSettings();
+
+            // Saving the default user's data.
+            SaveUserData();
         }
 
         /// <summary>
@@ -87,7 +117,8 @@ namespace MAL_Reviewer_Core
         /// Sets the currently connected MAL user.
         /// </summary>
         /// <param name="user"> The loaded MAL user. </param>
-        public static void SetUser(MALUserModel user)
+        /// <param name="savedAt"> When the user was loaded from their saved data, the date of that data; null when fetched from MAL now. </param>
+        public static void SetUser(MALUserModel user, DateTimeOffset? savedAt = null)
         {
             if (user == null)
             {
@@ -99,6 +130,35 @@ namespace MAL_Reviewer_Core
             model.Load(user);
 
             User = model;
+            loadedUser = user;
+            loadedUserSaved = savedAt.HasValue;
+            UserFetchedAt = savedAt ?? DateTimeOffset.Now;
+        }
+
+        /// <summary>
+        /// Saves the data of the connected user when they are the default user, so it can be shown when MAL can't be reached.
+        /// Without a default user, the saved data is deleted.
+        /// </summary>
+        public static void SaveUserData()
+        {
+            string defaultUser = Settings?.UserSettings.DefaultUser;
+
+            if (UserCache == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(defaultUser))
+            {
+                UserCache.Clear();
+                return;
+            }
+
+            if (loadedUser != null && !loadedUserSaved && string.Equals(loadedUser.Username, defaultUser, StringComparison.OrdinalIgnoreCase))
+            {
+                UserCache.Save(loadedUser, UserFetchedAt);
+                loadedUserSaved = true;
+            }
         }
 
         /// <summary>
@@ -107,6 +167,9 @@ namespace MAL_Reviewer_Core
         public static void UnloadUser()
         {
             User = null;
+            loadedUser = null;
+            loadedUserSaved = false;
+            UserFetchedAt = null;
         }
 
         #endregion

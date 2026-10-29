@@ -48,6 +48,15 @@ namespace MAL_Reviewer_UI.forms
 
         #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// When the loaded user was shown from their saved data instead of MAL, the date of that data.
+        /// </summary>
+        public DateTimeOffset? SavedAt { get; private set; }
+
+        #endregion
+
         #region Constructors
 
         /// <summary>
@@ -114,6 +123,7 @@ namespace MAL_Reviewer_UI.forms
 
             MALUserModel userModel = null;
             string error = null;
+            bool closeOnError = false;
 
             try
             {
@@ -133,6 +143,22 @@ namespace MAL_Reviewer_UI.forms
             catch (DataSourceUnavailableException ex)
             {
                 error = $"The user's data could not be fetched right now, please try again later.\n\n{ ex.Message }";
+
+                // At start-up, showing the data saved the last time instead, or starting without it.
+                if (this.auto)
+                {
+                    if (Core.UserCache.TryLoad(username, out MALUserModel saved, out DateTimeOffset savedAt))
+                    {
+                        userModel = saved;
+                        this.SavedAt = savedAt;
+                        error = null;
+                    }
+                    else
+                    {
+                        error = $"MAL can't be reached right now, and no data of “{ username }” was saved on this computer yet, so the application starts without it.\n\n{ ex.Message }";
+                        closeOnError = true;
+                    }
+                }
             }
 
             if (this.IsDisposed || cts.IsCancellationRequested)
@@ -145,6 +171,12 @@ namespace MAL_Reviewer_UI.forms
             if (error != null)
             {
                 MessageBox.Show(error, "Notice", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+                if (closeOnError)
+                {
+                    this.Close();
+                    return;
+                }
 
                 this.bLoad.Enabled = true;
                 this.searchControl.ToggleLoading(false);
