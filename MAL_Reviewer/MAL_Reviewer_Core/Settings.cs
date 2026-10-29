@@ -80,6 +80,11 @@ namespace MAL_Reviewer_Core
         public ReviewTemplatesController ReviewTemplatesSettings { get; set; }
 
         /// <summary>
+        /// The search settings.
+        /// </summary>
+        public SearchController SearchSettings { get; set; }
+
+        /// <summary>
         /// The file the unreadable settings were moved to by the last load, if any.
         /// </summary>
         public string RecoveredFilePath { get; private set; }
@@ -97,6 +102,7 @@ namespace MAL_Reviewer_Core
             this.config = config ?? throw new ArgumentNullException(nameof(config));
             this.UserSettings = new UserController();
             this.ReviewTemplatesSettings = new ReviewTemplatesController();
+            this.SearchSettings = new SearchController();
         }
 
         #endregion
@@ -141,6 +147,7 @@ namespace MAL_Reviewer_Core
             {
                 this.UserSettings = new UserController { DefaultUser = legacy.DefaultUser ?? string.Empty };
                 this.ReviewTemplatesSettings = new ReviewTemplatesController { ReviewTemplates = legacy.ReviewTemplates };
+                this.SearchSettings = new SearchController();
 
                 // Saving in the new format first, so the old file is only set aside once its data is safe.
                 SaveSettings();
@@ -168,7 +175,8 @@ namespace MAL_Reviewer_Core
             {
                 FormatVersion = FormatVersion,
                 User = this.UserSettings,
-                ReviewTemplates = this.ReviewTemplatesSettings.ReviewTemplates
+                ReviewTemplates = this.ReviewTemplatesSettings.ReviewTemplates,
+                Search = this.SearchSettings
             };
 
             // Writing next to the target first, so an interrupted save never leaves a half-written file.
@@ -187,6 +195,9 @@ namespace MAL_Reviewer_Core
 
             // Seeding review template settings.
             this.ReviewTemplatesSettings.SeedSettings();
+
+            // Seeding the search settings.
+            this.SearchSettings.SeedSettings();
         }
 
         /// <summary>
@@ -199,6 +210,9 @@ namespace MAL_Reviewer_Core
 
             // Resetting the review template's settings.
             this.ReviewTemplatesSettings.ResetSettings();
+
+            // Resetting the search settings.
+            this.SearchSettings.ResetSettings();
         }
 
         #endregion
@@ -209,6 +223,7 @@ namespace MAL_Reviewer_Core
         {
             this.UserSettings = new UserController();
             this.ReviewTemplatesSettings = new ReviewTemplatesController();
+            this.SearchSettings = new SearchController();
 
             SeedSettings();
         }
@@ -231,6 +246,7 @@ namespace MAL_Reviewer_Core
             });
 
             this.ReviewTemplatesSettings = new ReviewTemplatesController { ReviewTemplates = templates };
+            this.SearchSettings = document.Search ?? new SearchController();
         }
 
         #endregion
@@ -247,6 +263,9 @@ namespace MAL_Reviewer_Core
 
             [JsonPropertyName("reviewTemplates")]
             public List<ReviewTemplateModel> ReviewTemplates { get; set; }
+
+            [JsonPropertyName("search")]
+            public SearchController Search { get; set; }
         }
 
         #endregion

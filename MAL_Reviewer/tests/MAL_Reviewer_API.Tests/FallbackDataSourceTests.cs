@@ -30,7 +30,7 @@ namespace MAL_Reviewer_API.Tests
 
             public int Calls { get; private set; }
 
-            public Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, CancellationToken ct) => Answer(Results);
+            public Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, int limit, CancellationToken ct) => Answer(Results);
 
             public Task<AnimeModel> GetAnimeAsync(int malId, CancellationToken ct) => Answer(new AnimeModel { Mal_id = malId, Title = Name });
 
@@ -55,7 +55,7 @@ namespace MAL_Reviewer_API.Tests
             FakeSource primary = new FakeSource("Primary", true, new[] { new SearchResultsModel { Mal_id = 1 } });
             FakeSource secondary = new FakeSource("Secondary", true);
 
-            SearchResultsModel[] results = await new FallbackDataSource(primary, secondary).SearchAsync(MediaKind.Anime, "x", TestContext.Current.CancellationToken);
+            SearchResultsModel[] results = await new FallbackDataSource(primary, secondary).SearchAsync(MediaKind.Anime, "x", 10, TestContext.Current.CancellationToken);
 
             Assert.Single(results);
             Assert.Equal(0, secondary.Calls);
@@ -66,7 +66,7 @@ namespace MAL_Reviewer_API.Tests
         {
             FakeSource secondary = new FakeSource("Secondary", true, new[] { new SearchResultsModel() });
 
-            SearchResultsModel[] results = await new FallbackDataSource(new FakeSource("Primary", true), secondary).SearchAsync(MediaKind.Anime, "x", TestContext.Current.CancellationToken);
+            SearchResultsModel[] results = await new FallbackDataSource(new FakeSource("Primary", true), secondary).SearchAsync(MediaKind.Anime, "x", 10, TestContext.Current.CancellationToken);
 
             Assert.Empty(results);
             Assert.Equal(0, secondary.Calls);

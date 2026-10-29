@@ -59,8 +59,10 @@ Package versions are managed centrally in `MAL_Reviewer/Directory.Packages.props
 ## Data sources
 All the data comes from free services that need no account or API key:
 
-- [Jikan v4](https://jikan.moe/) for searches, Anime and Manga details, user profiles, statistics and favorites.
-- [AniList](https://anilist.co/) as an automatic fallback for searches and details whenever Jikan is unavailable.
+- [AniList](https://anilist.co/) for searches, since it answers several times faster, with Jikan as the fallback.
+- [Jikan v4](https://jikan.moe/) for Anime and Manga details, user profiles, statistics and favorites, with AniList as the fallback for details.
+
+Searches and details are kept in memory for 10 minutes. When a service fails, the other one is used for the next 2 minutes.
 - MyAnimeList's public list pages for users' Anime and Manga lists (Jikan stopped serving them in 2022). Private lists show as private.
 
 User profiles are only available through Jikan, so loading a user needs Jikan to be up.

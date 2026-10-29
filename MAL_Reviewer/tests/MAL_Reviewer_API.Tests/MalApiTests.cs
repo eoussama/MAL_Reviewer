@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using MAL_Reviewer_API.models.SearchModels;
+using MAL_Reviewer_API.models.TargetModels;
 using MAL_Reviewer_API.models.UserModels;
 using MAL_Reviewer_API.sources;
 using RichardSzalay.MockHttp;
@@ -15,17 +16,70 @@ namespace MAL_Reviewer_API.Tests
     public class MalApiTests
     {
         [Fact]
-        public async Task Search_FallsBackToAniList_WhenJikanIsDown()
+        public async Task Search_AsksAniListFirst_WithTheLimit()
         {
             MockHttpMessageHandler mock = new MockHttpMessageHandler();
-            mock.When(TestSupport.JikanUrl + "*").Throw(new HttpRequestException("refused"));
-            mock.When(HttpMethod.Post, TestSupport.AniListUrl).Respond("application/json", TestSupport.Fixture("anilist_search.json"));
+            MockedRequest jikan = mock.When(TestSupport.JikanUrl + "*").Respond("application/json", TestSupport.Fixture("jikan_anime_search.json"));
+            mock.When(HttpMethod.Post, TestSupport.AniListUrl)
+                .WithPartialContent("\"perPage\":5")
+                .Respond("application/json", TestSupport.Fixture("anilist_search.json"));
 
             using (MalApi api = TestSupport.Api(mock))
             {
-                SearchResultsModel[] results = await api.SearchAsync(MediaKind.Anime, "naruto", TestContext.Current.CancellationToken);
+                SearchResultsModel[] results = await api.SearchAsync(MediaKind.Anime, "naruto", 5, TestContext.Current.CancellationToken);
 
                 Assert.Equal(20, results[0].Mal_id);
+                Assert.Equal(0, mock.GetMatchCount(jikan));
+            }
+        }
+
+        [Fact]
+        public async Task Search_FallsBackToJikan_WhenAniListIsDown()
+        {
+            MockHttpMessageHandler mock = new MockHttpMessageHandler();
+            mock.When(HttpMethod.Post, TestSupport.AniListUrl).Throw(new HttpRequestException("refused"));
+            mock.When(TestSupport.JikanUrl + "anime").WithQueryString("limit", "3").Respond("application/json", TestSupport.Fixture("jikan_anime_search.json"));
+
+            using (MalApi api = TestSupport.Api(mock))
+            {
+                SearchResultsModel[] results = await api.SearchAsync(MediaKind.Anime, "naruto", 3, TestContext.Current.CancellationToken);
+
+                Assert.Equal("Naruto", results[0].Title);
+            }
+        }
+
+        [Fact]
+        public async Task Search_AnswersRepeatedSearchesFromTheCache()
+        {
+            MockHttpMessageHandler mock = new MockHttpMessageHandler();
+            MockedRequest aniList = mock.When(HttpMethod.Post, TestSupport.AniListUrl).Respond("application/json", TestSupport.Fixture("anilist_search.json"));
+
+            using (MalApi api = TestSupport.Api(mock))
+            {
+                await api.SearchAsync(MediaKind.Anime, "naruto", 10, TestContext.Current.CancellationToken);
+                await api.SearchAsync(MediaKind.Anime, " Naruto ", 10, TestContext.Current.CancellationToken);
+                Assert.Equal(1, mock.GetMatchCount(aniList));
+
+                // Another kind or limit is another search.
+                await api.SearchAsync(MediaKind.Manga, "naruto", 10, TestContext.Current.CancellationToken);
+                await api.SearchAsync(MediaKind.Anime, "naruto", 5, TestContext.Current.CancellationToken);
+                Assert.Equal(3, mock.GetMatchCount(aniList));
+            }
+        }
+
+        [Fact]
+        public async Task Details_AreCached()
+        {
+            MockHttpMessageHandler mock = new MockHttpMessageHandler();
+            MockedRequest jikan = mock.When(TestSupport.JikanUrl + "anime/1").Respond("application/json", TestSupport.Fixture("jikan_anime.json"));
+
+            using (MalApi api = TestSupport.Api(mock))
+            {
+                await api.GetAnimeAsync(1, TestContext.Current.CancellationToken);
+                AnimeModel again = await api.GetAnimeAsync(1, TestContext.Current.CancellationToken);
+
+                Assert.Equal("Cowboy Bebop", again.Title);
+                Assert.Equal(1, mock.GetMatchCount(jikan));
             }
         }
 
@@ -188,6 +242,7 @@ namespace MAL_Reviewer_API.Tests
         public async Task ForwardsEveryCall_ToTheConfiguredApi()
         {
             MockHttpMessageHandler mock = new MockHttpMessageHandler();
+            mock.When(HttpMethod.Post, TestSupport.AniListUrl).Respond("application/json", TestSupport.Fixture("anilist_search.json"));
             mock.When(TestSupport.JikanUrl + "anime").Respond("application/json", TestSupport.Fixture("jikan_anime_search.json"));
             mock.When(TestSupport.JikanUrl + "anime/1").Respond("application/json", TestSupport.Fixture("jikan_anime.json"));
             mock.When(TestSupport.JikanUrl + "manga/2").Respond("application/json", TestSupport.Fixture("jikan_manga.json"));

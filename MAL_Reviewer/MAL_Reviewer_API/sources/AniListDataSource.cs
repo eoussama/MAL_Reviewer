@@ -20,7 +20,7 @@ namespace MAL_Reviewer_API.sources
         #region Fields
 
         internal const string SearchQuery =
-            "query ($search: String, $type: MediaType, $perPage: Int) { Page(perPage: $perPage) { media(search: $search, type: $type, sort: SEARCH_MATCH) { idMal title { romaji english } format coverImage { large } } } }";
+            "query ($search: String, $type: MediaType, $perPage: Int) { Page(perPage: $perPage) { media(search: $search, type: $type, sort: SEARCH_MATCH) { idMal title { romaji english } format coverImage { medium large } } } }";
 
         internal const string DetailsQuery =
             "query ($idMal: Int, $type: MediaType) { Media(idMal: $idMal, type: $type) { idMal title { romaji english } format status episodes chapters volumes averageScore description(asHtml: false) coverImage { large } } }";
@@ -59,7 +59,7 @@ namespace MAL_Reviewer_API.sources
 
         #region Public methods
 
-        public async Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, CancellationToken ct)
+        public async Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, int limit, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
@@ -69,7 +69,7 @@ namespace MAL_Reviewer_API.sources
             object body = new
             {
                 query = SearchQuery,
-                variables = new { search = query.Trim(), type = ToAniListType(kind), perPage = JikanDataSource.SearchLimit }
+                variables = new { search = query.Trim(), type = ToAniListType(kind), perPage = SearchLimits.Clamp(limit) }
             };
 
             AniListResponse<AniListPageData> response = await this.http.PostAsync<AniListResponse<AniListPageData>>(this.url, body, ct);
@@ -81,7 +81,8 @@ namespace MAL_Reviewer_API.sources
                     Mal_id = media.IdMal.Value,
                     Title = media.Title?.Romaji ?? media.Title?.English,
                     Type = ToMalType(media.Format),
-                    Image_url = media.CoverImage?.Large
+                    // Search cards are small, so the lighter cover is enough.
+                    Image_url = media.CoverImage?.Medium ?? media.CoverImage?.Large
                 })
                 .ToArray();
         }
@@ -236,6 +237,9 @@ namespace MAL_Reviewer_API.sources
 
     internal class AniListCover
     {
+        [JsonPropertyName("medium")]
+        public string Medium { get; set; }
+
         [JsonPropertyName("large")]
         public string Large { get; set; }
     }

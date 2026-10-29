@@ -14,7 +14,7 @@ namespace MAL_Reviewer_UI.user_controls
         public event EventHandler<string> TextboxSubmitEvent;
 
         private bool toggleIcon = true;
-        private const int searchInterval = 500;
+        private const int defaultSearchInterval = 500;
 
         // Decides whether a submit is new; only successful submits are remembered.
         private readonly SearchGate gate = new SearchGate();
@@ -125,6 +125,28 @@ namespace MAL_Reviewer_UI.user_controls
         public bool AutoSubmit { get; set; } = false;
 
         /// <summary>
+        /// Gets and sets how long to wait after the last key press before auto submitting, in milliseconds.
+        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public int SearchInterval
+        {
+            get => this.inputDelay.Interval;
+            set => this.inputDelay.Interval = Math.Max(1, value);
+        }
+
+        /// <summary>
+        /// Gets and sets whether pressing Enter submits the textbox.
+        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool SubmitOnEnter { get; set; } = false;
+
+        /// <summary>
+        /// Gets and sets whether typing is blocked while loading; when it isn't, a new submit may start before the last one ends.
+        /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool LockWhileLoading { get; set; } = true;
+
+        /// <summary>
         /// Gets and sets the control's placeholder.
         /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
@@ -157,9 +179,10 @@ namespace MAL_Reviewer_UI.user_controls
             this.loaderControl.BringToFront();
             this.inputDelay = new System.Windows.Forms.Timer
             {
-                Interval = searchInterval
+                Interval = defaultSearchInterval
             };
             this.inputDelay.Tick += InputDelay_Tick;
+            this.inputTextBox.KeyDown += InputTextBox_KeyDown;
             this.Disposed += (s, e) => this.inputDelay.Dispose();
 
             TextboxControl_Leave(this, EventArgs.Empty);
@@ -187,7 +210,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// </summary>
         public void ToggleLoading(bool state)
         {
-            this.inputTextBox.Enabled = !state;
+            this.inputTextBox.Enabled = !state || !this.LockWhileLoading;
             this.iconPictureBox.Visible = !state && this.ToggleIcon;
             this.loaderControl.Visible = state && this.ToggleIcon;
 
@@ -247,6 +270,22 @@ namespace MAL_Reviewer_UI.user_controls
         /// Clear the textbox.
         /// </summary>
         public void Clear() => this.inputTextBox.Clear();
+
+        /// <summary>
+        /// Forgets the last successful submit, so the next one is always sent.
+        /// </summary>
+        public void ResetSubmit() => this.gate.Reset();
+
+        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (this.SubmitOnEnter && e.KeyCode == Keys.Return)
+            {
+                // Submitting now rather than after the typing delay.
+                this.inputDelay.Stop();
+                e.SuppressKeyPress = true;
+                this.Submit();
+            }
+        }
 
         private void PlaceholderLabel_Click(object sender, EventArgs e)
         {

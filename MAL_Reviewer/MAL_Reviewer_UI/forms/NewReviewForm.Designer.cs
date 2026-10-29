@@ -65,6 +65,7 @@
             this.rbManga = new System.Windows.Forms.RadioButton();
             this.lTitle = new System.Windows.Forms.Label();
             this.TargetNotFoundLabel = new System.Windows.Forms.Label();
+            this.ModeLinkLabel = new System.Windows.Forms.LinkLabel();
             this.lPreview = new System.Windows.Forms.Label();
             this.ReviewButton = new System.Windows.Forms.Button();
             this.InfoTooltip = new System.Windows.Forms.ToolTip(this.components);
@@ -287,6 +288,7 @@
             this.pSetup.Controls.Add(this.rbManga);
             this.pSetup.Controls.Add(this.lTitle);
             this.pSetup.Controls.Add(this.TargetNotFoundLabel);
+            this.pSetup.Controls.Add(this.ModeLinkLabel);
             this.pSetup.Location = new System.Drawing.Point(27, 12);
             this.pSetup.Name = "pSetup";
             this.pSetup.Size = new System.Drawing.Size(255, 339);
@@ -484,11 +486,26 @@
             this.lTitle.TabIndex = 0;
             this.lTitle.Text = "Anime title";
             // 
+            // ModeLinkLabel
+            // 
+            this.ModeLinkLabel.ActiveLinkColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.ModeLinkLabel.AutoSize = true;
+            this.ModeLinkLabel.Font = new System.Drawing.Font("Bahnschrift Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ModeLinkLabel.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
+            this.ModeLinkLabel.LinkColor = System.Drawing.SystemColors.HotTrack;
+            this.ModeLinkLabel.Location = new System.Drawing.Point(10, 79);
+            this.ModeLinkLabel.Name = "ModeLinkLabel";
+            this.ModeLinkLabel.Size = new System.Drawing.Size(113, 13);
+            this.ModeLinkLabel.TabIndex = 8;
+            this.ModeLinkLabel.TabStop = true;
+            this.ModeLinkLabel.Text = "Search by link instead";
+            this.ModeLinkLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.ModeLinkLabel_LinkClicked);
+            // 
             // TargetNotFoundLabel
             // 
             this.TargetNotFoundLabel.Font = new System.Drawing.Font("Bahnschrift Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TargetNotFoundLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.TargetNotFoundLabel.Location = new System.Drawing.Point(10, 80);
+            this.TargetNotFoundLabel.Location = new System.Drawing.Point(10, 98);
             this.TargetNotFoundLabel.Name = "TargetNotFoundLabel";
             this.TargetNotFoundLabel.Size = new System.Drawing.Size(227, 52);
             this.TargetNotFoundLabel.TabIndex = 7;
@@ -619,6 +636,7 @@
         private System.Windows.Forms.Label lTargetStatus;
         private System.Windows.Forms.Label lPreview;
         private System.Windows.Forms.Label TargetNotFoundLabel;
+        private System.Windows.Forms.LinkLabel ModeLinkLabel;
         private System.Windows.Forms.Button ReviewButton;
         private System.Windows.Forms.ToolTip InfoTooltip;
         private System.Windows.Forms.RichTextBox lTargetSynopsis;

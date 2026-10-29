@@ -20,12 +20,13 @@ namespace MAL_Reviewer_API.sources
         string Name { get; }
 
         /// <summary>
-        /// Returns up to 10 entries matching the passed title.
+        /// Returns the entries matching the passed title, best matches first.
         /// </summary>
         /// <param name="kind"> The kind of entries to search. </param>
         /// <param name="query"> The title to search for. </param>
+        /// <param name="limit"> The most results to return, within <see cref="SearchLimits"/>. </param>
         /// <param name="ct"> The cancellation token that permits the task's cancellation. </param>
-        Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, CancellationToken ct);
+        Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, int limit, CancellationToken ct);
 
         /// <summary>
         /// Returns the Anime with the passed MAL id, or null if it does not exist.

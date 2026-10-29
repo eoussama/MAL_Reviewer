@@ -19,9 +19,9 @@ namespace MAL_Reviewer_API
     public interface IMalApi
     {
         /// <summary>
-        /// Returns up to 10 entries matching the passed title.
+        /// Returns up to <paramref name="limit"/> entries matching the passed title, (see <see cref="SearchLimits"/>).
         /// </summary>
-        Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string title, CancellationToken ct);
+        Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string title, int limit, CancellationToken ct);
 
         /// <summary>
         /// Returns the Anime with the passed MAL id, or null if it does not exist.

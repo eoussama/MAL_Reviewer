@@ -129,6 +129,7 @@
             this.UserSettingsResetButton.TabIndex = 28;
             this.UserSettingsResetButton.Text = "Reset settings";
             this.UserSettingsResetButton.UseVisualStyleBackColor = false;
+            this.UserSettingsResetButton.Click += new System.EventHandler(this.UserSettingsResetButton_Click);
             // 
             // DefaultUserTextboxControl
             // 

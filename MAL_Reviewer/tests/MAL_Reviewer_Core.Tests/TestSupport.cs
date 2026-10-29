@@ -54,7 +54,7 @@ namespace MAL_Reviewer_Core.Tests
 
         public List<string> RequestedUsers { get; } = new List<string>();
 
-        public Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string title, CancellationToken ct) => Task.FromResult(Array.Empty<SearchResultsModel>());
+        public Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string title, int limit, CancellationToken ct) => Task.FromResult(Array.Empty<SearchResultsModel>());
 
         public Task<AnimeModel> GetAnimeAsync(int animeId, CancellationToken ct) => Task.FromResult<AnimeModel>(null);
 

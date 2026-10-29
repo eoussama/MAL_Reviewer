@@ -62,6 +62,19 @@ namespace MAL_Reviewer_UI.forms.sub_forms
             }
         }
 
+        private void UserSettingsResetButton_Click(object sender, EventArgs e)
+        {
+            if (DialogResult.Yes == MessageBox.Show("Are you sure you want to reset the user settings?\nThe default user will be removed.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
+            {
+                Core.Settings.UserSettings.ResetSettings();
+                Core.Save();
+
+                InitDisplay();
+
+                MessageBox.Show("User settings were successfully reset.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
         #endregion
 
         #region Public methods

@@ -26,7 +26,7 @@ namespace MAL_Reviewer_API.Tests
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(TestSupport.Fixture("anilist_search.json")) };
             });
 
-            SearchResultsModel[] results = await Source(mock).SearchAsync(MediaKind.Anime, " naruto ", TestContext.Current.CancellationToken);
+            SearchResultsModel[] results = await Source(mock).SearchAsync(MediaKind.Anime, " naruto ", 10, TestContext.Current.CancellationToken);
 
             Assert.Equal(2, results.Length);
             Assert.Equal(20, results[0].Mal_id);
@@ -51,7 +51,7 @@ namespace MAL_Reviewer_API.Tests
         {
             MockHttpMessageHandler mock = new MockHttpMessageHandler();
 
-            Assert.Empty(await Source(mock).SearchAsync(MediaKind.Manga, " ", TestContext.Current.CancellationToken));
+            Assert.Empty(await Source(mock).SearchAsync(MediaKind.Manga, " ", 10, TestContext.Current.CancellationToken));
         }
 
         [Fact]
@@ -60,7 +60,7 @@ namespace MAL_Reviewer_API.Tests
             MockHttpMessageHandler mock = new MockHttpMessageHandler();
             mock.When(HttpMethod.Post, TestSupport.AniListUrl).Respond("application/json", "{\"data\": {\"Page\": null}}");
 
-            Assert.Empty(await Source(mock).SearchAsync(MediaKind.Manga, "x", TestContext.Current.CancellationToken));
+            Assert.Empty(await Source(mock).SearchAsync(MediaKind.Manga, "x", 10, TestContext.Current.CancellationToken));
         }
 
         [Fact]

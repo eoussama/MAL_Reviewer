@@ -16,11 +16,6 @@ namespace MAL_Reviewer_API.sources
     {
         #region Fields
 
-        /// <summary>
-        /// The number of search results requested.
-        /// </summary>
-        internal const int SearchLimit = 10;
-
         private readonly ApiHttp http;
         private readonly string baseUrl;
 
@@ -49,14 +44,14 @@ namespace MAL_Reviewer_API.sources
 
         #region Public methods
 
-        public async Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, CancellationToken ct)
+        public async Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, int limit, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
                 return Array.Empty<SearchResultsModel>();
             }
 
-            string url = ApiOptions.Combine(this.baseUrl, $"{ kind.ToPathSegment() }?q={ Uri.EscapeDataString(query.Trim()) }&limit={ SearchLimit }");
+            string url = ApiOptions.Combine(this.baseUrl, $"{ kind.ToPathSegment() }?q={ Uri.EscapeDataString(query.Trim()) }&limit={ SearchLimits.Clamp(limit) }");
             JikanEnvelope<JikanEntry[]> envelope = await this.http.GetAsync<JikanEnvelope<JikanEntry[]>>(url, ct);
 
             return (envelope?.Data ?? Array.Empty<JikanEntry>())

@@ -61,7 +61,20 @@ namespace MAL_Reviewer_API
         /// <returns> Up to 10 search results; empty when nothing matches. </returns>
         public static Task<SearchResultsModel[]> Search(string type, string title, CancellationToken ct)
         {
-            return GetApi().SearchAsync(MediaKindExtensions.Parse(type), title, ct);
+            return Search(type, title, SearchLimits.Default, ct);
+        }
+
+        /// <summary>
+        /// Returns the search results from MAL given the passed target.
+        /// </summary>
+        /// <param name="type"> The type of the target; (anime or manga). </param>
+        /// <param name="title"> The title of the target; (the Anime/Manga's title/name). </param>
+        /// <param name="limit"> The most results to return. </param>
+        /// <param name="ct"> The cancellation token that permits the task's cancellation. </param>
+        /// <returns> Up to <paramref name="limit"/> search results; empty when nothing matches. </returns>
+        public static Task<SearchResultsModel[]> Search(string type, string title, int limit, CancellationToken ct)
+        {
+            return GetApi().SearchAsync(MediaKindExtensions.Parse(type), title, limit, ct);
         }
 
         /// <summary>

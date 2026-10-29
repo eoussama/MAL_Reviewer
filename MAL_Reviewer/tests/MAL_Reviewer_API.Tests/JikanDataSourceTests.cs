@@ -21,7 +21,7 @@ namespace MAL_Reviewer_API.Tests
                 .WithExactQueryString("q=naruto&limit=10")
                 .Respond("application/json", TestSupport.Fixture("jikan_anime_search.json"));
 
-            SearchResultsModel[] results = await Source(mock).SearchAsync(MediaKind.Anime, "  naruto ", TestContext.Current.CancellationToken);
+            SearchResultsModel[] results = await Source(mock).SearchAsync(MediaKind.Anime, "  naruto ", 10, TestContext.Current.CancellationToken);
 
             Assert.Equal(2, results.Length);
             Assert.Equal(20, results[0].Mal_id);
@@ -39,7 +39,7 @@ namespace MAL_Reviewer_API.Tests
                 .WithQueryString("q", "Fullmetal & Alchemist?")
                 .Respond("application/json", "{\"data\": []}");
 
-            SearchResultsModel[] results = await Source(mock).SearchAsync(MediaKind.Manga, "Fullmetal & Alchemist?", TestContext.Current.CancellationToken);
+            SearchResultsModel[] results = await Source(mock).SearchAsync(MediaKind.Manga, "Fullmetal & Alchemist?", 10, TestContext.Current.CancellationToken);
 
             Assert.Empty(results);
             mock.VerifyNoOutstandingExpectation();
@@ -53,7 +53,7 @@ namespace MAL_Reviewer_API.Tests
         {
             MockHttpMessageHandler mock = new MockHttpMessageHandler();
 
-            Assert.Empty(await Source(mock).SearchAsync(MediaKind.Anime, query, TestContext.Current.CancellationToken));
+            Assert.Empty(await Source(mock).SearchAsync(MediaKind.Anime, query, 10, TestContext.Current.CancellationToken));
             Assert.Equal(0, mock.GetMatchCount(mock.Fallback));
         }
 
@@ -63,7 +63,7 @@ namespace MAL_Reviewer_API.Tests
             MockHttpMessageHandler mock = new MockHttpMessageHandler();
             mock.When(TestSupport.JikanUrl + "anime*").Respond("application/json", "{}");
 
-            Assert.Empty(await Source(mock).SearchAsync(MediaKind.Anime, "x", TestContext.Current.CancellationToken));
+            Assert.Empty(await Source(mock).SearchAsync(MediaKind.Anime, "x", 10, TestContext.Current.CancellationToken));
         }
 
         [Fact]

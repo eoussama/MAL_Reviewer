@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using MAL_Reviewer_UI.user_controls;
 using MAL_Reviewer_UI.extensions;
 using MAL_Reviewer_Core;
+using MAL_Reviewer_Core.controllers;
+using MAL_Reviewer_Core.enumerations;
 using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_Core.models.ReviewTemplateModels;
 using MAL_Reviewer_API;
@@ -43,6 +45,21 @@ namespace MAL_Reviewer_UI.forms
         /// Cancels everything when the form closes.
         /// </summary>
         private readonly CancellationTokenSource cts;
+
+        /// <summary>
+        /// Whether the target is looked for by title or by link.
+        /// </summary>
+        private SearchMode mode;
+
+        /// <summary>
+        /// Set while the Anime/Manga option is changed by the form itself, so it doesn't start a search.
+        /// </summary>
+        private bool changingKind = false;
+
+        /// <summary>
+        /// Cancels the running search when another one starts.
+        /// </summary>
+        private CancellationTokenSource searchCts;
 
         /// <summary>
         /// Cancels the running preview when another one starts.
@@ -95,11 +112,18 @@ namespace MAL_Reviewer_UI.forms
             LoadReviewTemplates();
 
             cts = new CancellationTokenSource();
-            string target = CurrentKindName();
+
+            // Applying the search settings; typing stays possible while a search runs, and a newer search replaces it.
+            SearchController settings = Core.Settings.SearchSettings;
+
+            this.searchControl.AutoSubmit = settings.SearchWhileTyping;
+            this.searchControl.SearchInterval = settings.Delay;
+            this.searchControl.SubmitOnEnter = true;
+            this.searchControl.LockWhileLoading = false;
+            this.mode = settings.DefaultMode;
 
             this.ActiveControl = this.searchControl.Controls["inputTextBox"];
-            this.searchControl.Placeholder = $"{ target } title...";
-            TargetNotFoundLabel.Text = HintText(target);
+            ApplyMode();
         }
 
         #endregion
@@ -120,16 +144,64 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The event's arguments. </param>
         private void RbAnime_CheckedChanged(object sender, EventArgs e)
         {
-            string target = CurrentKindName();
+            UpdateTexts();
+            this.searchControl.Tag = CurrentKind();
 
-            this.lTitle.Text = $"{ target } title";
+            if (!this.changingKind)
+            {
+                this.searchControl.Submit();
+            }
+        }
+
+        /// <summary>
+        /// Switches between searching by title and by link.
+        /// </summary>
+        /// <param name="sender"> The sender. </param>
+        /// <param name="e"> The event's arguments. </param>
+        private void ModeLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            this.mode = this.mode == SearchMode.Title ? SearchMode.Link : SearchMode.Title;
+
+            // A title isn't a link and vice versa, so the box starts over.
+            searchCts?.Cancel();
+            this.searchControl.InnerText = string.Empty;
+            this.searchControl.ResetSubmit();
+            this.dataFetched = false;
+            ToggleSearchLoading(false);
+
+            ApplyMode();
+            this.ActiveControl = this.searchControl.Controls["inputTextBox"];
+        }
+
+        /// <summary>
+        /// Shows the controls of the current search mode.
+        /// </summary>
+        private void ApplyMode()
+        {
+            bool byLink = this.mode == SearchMode.Link;
+
+            // A link tells by itself whether it is of an Anime or a Manga.
+            rbAnime.Enabled = !byLink;
+            rbManga.Enabled = !byLink;
+            ModeLinkLabel.Text = byLink ? "Search by title instead" : "Search by link instead";
+
+            UpdateTexts();
+        }
+
+        /// <summary>
+        /// Updates the texts that depend on the search mode and the Anime/Manga option.
+        /// </summary>
+        private void UpdateTexts()
+        {
+            string target = CurrentKindName();
+            bool byLink = this.mode == SearchMode.Link;
+
+            this.lTitle.Text = byLink ? "MAL link" : $"{ target } title";
             this.lPreview.Text = $"{ target } preview";
             this.TargetNotFoundLabel.Text = HintText(target);
 
-            this.searchControl.Placeholder = $"{ target } title...";
+            this.searchControl.Placeholder = byLink ? "MyAnimeList link..." : $"{ target } title...";
             this.searchControl.Icon = CurrentIcon();
-            this.searchControl.Tag = CurrentKind();
-            this.searchControl.Submit();
         }
 
         /// <summary>
@@ -194,7 +266,30 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The searched text. </param>
         private async void SearchControl_TextboxSubmitEvent(object sender, string e)
         {
-            // Reading the search kind now; the radio buttons are locked until the search ends.
+            // A newer search replaces the running one.
+            searchCts?.Cancel();
+            searchCts?.Dispose();
+
+            CancellationTokenSource current = CancellationTokenSource.CreateLinkedTokenSource(cts.Token);
+            searchCts = current;
+
+            // A link opens its entry directly, whichever the mode.
+            if (MalLink.TryParse(e, out MediaKind linkKind, out int linkId))
+            {
+                OpenLink(linkKind, linkId);
+                return;
+            }
+
+            if (this.mode == SearchMode.Link)
+            {
+                TargetNotFoundLabel.Text = $"That isn't the link of an Anime or a Manga on MyAnimeList, (ex: { MalLink.Example }).";
+                dataFetched = false;
+                searchControl.CompleteSubmit(true);
+                ToggleSearchLoading(false);
+                return;
+            }
+
+            // Reading the search kind now, so changing it during the search doesn't mix the results.
             MediaKind kind = rbAnime.Checked ? MediaKind.Anime : MediaKind.Manga;
             string kindName = CurrentKindName();
             bool succeeded = false;
@@ -203,9 +298,9 @@ namespace MAL_Reviewer_UI.forms
 
             try
             {
-                SearchResultsModel[] results = await MALHelper.Search(kind.ToPathSegment(), e, cts.Token);
+                SearchResultsModel[] results = await MALHelper.Search(kind.ToPathSegment(), e, Core.Settings.SearchSettings.ResultsLimit, current.Token);
 
-                if (this.IsDisposed)
+                if (this.IsDisposed || current.IsCancellationRequested)
                 {
                     return;
                 }
@@ -242,10 +337,10 @@ namespace MAL_Reviewer_UI.forms
             }
             catch (OperationCanceledException)
             {
-                // The form is closing.
+                // A newer search started, or the form is closing.
                 return;
             }
-            catch (DataSourceUnavailableException ex)
+            catch (DataSourceUnavailableException ex) when (!current.IsCancellationRequested)
             {
                 // Hiding the results of the previous search, which no longer match the text.
                 dataFetched = false;
@@ -257,7 +352,7 @@ namespace MAL_Reviewer_UI.forms
                 }
             }
 
-            if (this.IsDisposed)
+            if (this.IsDisposed || current.IsCancellationRequested)
             {
                 return;
             }
@@ -282,15 +377,37 @@ namespace MAL_Reviewer_UI.forms
         }
 
         /// <summary>
+        /// Previews the entry of a MyAnimeList link, without searching.
+        /// </summary>
+        /// <param name="kind"> Whether the link is of an Anime or a Manga. </param>
+        /// <param name="malId"> The MAL id of the entry. </param>
+        private void OpenLink(MediaKind kind, int malId)
+        {
+            // Following the link's kind without starting a title search for it.
+            this.changingKind = true;
+            (kind == MediaKind.Anime ? rbAnime : rbManga).Checked = true;
+            this.changingKind = false;
+            this.searchControl.Tag = CurrentKind();
+
+            dataFetched = false;
+            searchControl.CompleteSubmit(true);
+            ToggleSearchLoading(false);
+            UpdateTexts();
+
+            if (!(this.targetId == malId && this.previewKind == CurrentKind() && hasPreview && pPreview.Visible))
+            {
+                _ = PreviewAsync(malId, kind);
+            }
+        }
+
+        /// <summary>
         /// Toggles the loading animation for the search UI.
         /// </summary>
         /// <param name="state"> The state of the loading; (ON = true, OFF = false). </param>
         private void ToggleSearchLoading(bool state)
         {
             searchControl.ToggleLoading(state);
-            pSearchCards.Visible = !state && dataFetched && (bool)pSearchCards.Controls[0].Tag == true;
-            rbAnime.Enabled = !state;
-            rbManga.Enabled = !state;
+            pSearchCards.Visible = !state && dataFetched && this.mode == SearchMode.Title && (bool)pSearchCards.Controls[0].Tag == true;
 
             // Reseting the vertical scrolling.
             pSearchCards.VerticalScroll.Value = 0;
@@ -318,7 +435,7 @@ namespace MAL_Reviewer_UI.forms
         /// <param name="e"> The event's arguments. </param>
         private void SearchControl_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left && searchControl.Controls["inputTextBox"].Focused && searchControl.InnerText.Trim().Length >= searchControl.SubmitMin && (bool)pSearchCards.Controls[0].Tag == true && pSearchCards.Visible == false)
+            if (e.Button == MouseButtons.Left && searchControl.Controls["inputTextBox"].Focused && searchControl.InnerText.Trim().Length >= searchControl.SubmitMin && this.mode == SearchMode.Title && dataFetched && (bool)pSearchCards.Controls[0].Tag == true && pSearchCards.Visible == false)
             {
                 pSearchCards.Visible = true;
             }
@@ -515,9 +632,11 @@ namespace MAL_Reviewer_UI.forms
         /// <summary>
         /// The icon of the selected Anime/Manga radio button.
         /// </summary>
-        private System.Drawing.Image CurrentIcon() => rbAnime.Checked ? Icons.Anime : Icons.Manga;
+        private System.Drawing.Image CurrentIcon() => this.mode == SearchMode.Link ? Icons.Link : rbAnime.Checked ? Icons.Anime : Icons.Manga;
 
-        private static string HintText(string target) => $"Input the { target } title you want review on the text box above, meanwhile we will fetch any related data from MAL to help provide more information on the review target.";
+        private string HintText(string target) => this.mode == SearchMode.Link
+            ? $"Paste the MyAnimeList link of the Anime or Manga you want to review, (ex: { MalLink.Example }), and its information will be fetched from MAL."
+            : $"Input the { target } title you want review on the text box above, meanwhile we will fetch any related data from MAL to help provide more information on the review target. A MyAnimeList link works too.";
 
         #endregion
 
@@ -539,6 +658,7 @@ namespace MAL_Reviewer_UI.forms
         {
             base.OnFormClosed(e);
 
+            searchCts?.Dispose();
             previewCts?.Dispose();
             cts.Dispose();
 

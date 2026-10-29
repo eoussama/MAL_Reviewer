@@ -61,9 +61,9 @@ namespace MAL_Reviewer_API.sources
 
         #region Public methods
 
-        public Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, CancellationToken ct)
+        public Task<SearchResultsModel[]> SearchAsync(MediaKind kind, string query, int limit, CancellationToken ct)
         {
-            return RunAsync(source => source.SearchAsync(kind, query, ct));
+            return RunAsync(source => source.SearchAsync(kind, query, limit, ct));
         }
 
         public Task<AnimeModel> GetAnimeAsync(int malId, CancellationToken ct)

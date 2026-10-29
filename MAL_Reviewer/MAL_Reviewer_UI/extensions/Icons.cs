@@ -13,6 +13,7 @@ namespace MAL_Reviewer_UI.extensions
         private static readonly Lazy<Image> manga = new Lazy<Image>(() => Properties.Resources.icon_manga);
         private static readonly Lazy<Image> close = new Lazy<Image>(() => Properties.Resources.icon_close);
         private static readonly Lazy<Image> user = new Lazy<Image>(() => Properties.Resources.icon_user);
+        private static readonly Lazy<Image> link = new Lazy<Image>(() => Properties.Resources.icon_link);
         private static readonly Lazy<Image> loadingWhite = new Lazy<Image>(() => Properties.Resources.loading_gif_white);
         private static readonly Lazy<Image> loadingControlLight = new Lazy<Image>(() => Properties.Resources.loading_gif_control_light);
         private static readonly Lazy<Image> loadingControl = new Lazy<Image>(() => Properties.Resources.loading_gif_control);
@@ -24,6 +25,8 @@ namespace MAL_Reviewer_UI.extensions
         public static Image Close => close.Value;
 
         public static Image User => user.Value;
+
+        public static Image Link => link.Value;
 
         public static Image LoadingWhite => loadingWhite.Value;
 
