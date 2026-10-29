@@ -194,7 +194,7 @@ namespace MAL_Reviewer_Core.Tests
                 Assert.Equal(SearchController.MinDelay, settings.SearchSettings.Delay);
                 Assert.Equal(string.Empty, settings.UserSettings.DefaultUser);
                 Assert.Empty(settings.ReviewTemplatesSettings.ReviewTemplates);
-                Assert.Equal(ThemeKind.Light, settings.ThemeSettings.Theme);
+                Assert.Equal(ThemeKind.System, settings.ThemeSettings.Theme);
             }
         }
 

@@ -14,7 +14,12 @@ namespace MAL_Reviewer_Core.controllers
     {
         #region Fields
 
-        private ThemeKind theme = ThemeKind.Light;
+        /// <summary>
+        /// The theme of new installations and of a reset.
+        /// </summary>
+        public const ThemeKind DefaultTheme = ThemeKind.System;
+
+        private ThemeKind theme = DefaultTheme;
         private ThemePalette customColors = ThemePalette.Light;
 
         #endregion
@@ -24,11 +29,11 @@ namespace MAL_Reviewer_Core.controllers
         /// <summary>
         /// The chosen theme.
         /// </summary>
-        [JsonConverter(typeof(LenientEnumConverter<ThemeKind>))]
+        [JsonConverter(typeof(LenientThemeKindConverter))]
         public ThemeKind Theme
         {
             get => this.theme;
-            set => this.theme = Enum.IsDefined(value) ? value : ThemeKind.Light;
+            set => this.theme = Enum.IsDefined(value) ? value : DefaultTheme;
         }
 
         /// <summary>
@@ -39,17 +44,6 @@ namespace MAL_Reviewer_Core.controllers
             get => this.customColors;
             set => this.customColors = value ?? ThemePalette.Light;
         }
-
-        /// <summary>
-        /// The colors of the chosen theme, or null for the light theme, which keeps the colors the interface was designed with.
-        /// </summary>
-        [JsonIgnore]
-        public ThemePalette ActivePalette => this.Theme switch
-        {
-            ThemeKind.Dark => ThemePalette.Dark,
-            ThemeKind.Custom => new ThemePalette(this.CustomColors),
-            _ => null
-        };
 
         #endregion
 
@@ -65,6 +59,18 @@ namespace MAL_Reviewer_Core.controllers
         #region Public methods
 
         /// <summary>
+        /// The colors of the chosen theme, or null for the light theme, which keeps the colors the interface was designed with.
+        /// </summary>
+        /// <param name="windowsIsDark"> Whether Windows is set to show apps in dark mode, which the system theme follows. </param>
+        public ThemePalette PaletteFor(bool windowsIsDark) => this.Theme switch
+        {
+            ThemeKind.Dark => ThemePalette.Dark,
+            ThemeKind.Custom => new ThemePalette(this.CustomColors),
+            ThemeKind.System when windowsIsDark => ThemePalette.Dark,
+            _ => null
+        };
+
+        /// <summary>
         /// Resets the theme settings.
         /// </summary>
         public void ResetSettings()
@@ -77,10 +83,18 @@ namespace MAL_Reviewer_Core.controllers
         /// </summary>
         public void SeedSettings()
         {
-            Theme = ThemeKind.Light;
+            Theme = DefaultTheme;
             CustomColors = ThemePalette.Light;
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Reads the theme, unknown values meaning the default theme.
+    /// </summary>
+    internal class LenientThemeKindConverter : LenientEnumConverter<ThemeKind>
+    {
+        protected override ThemeKind Fallback => ThemeController.DefaultTheme;
     }
 }

@@ -18,6 +18,11 @@ namespace MAL_Reviewer_Core.enumerations
         /// <summary>
         /// Colors picked by the user.
         /// </summary>
-        Custom
+        Custom,
+
+        /// <summary>
+        /// The light or dark colors, following the apps mode chosen in the Windows settings.
+        /// </summary>
+        System
     }
 }

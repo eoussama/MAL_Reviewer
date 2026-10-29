@@ -16,10 +16,8 @@ namespace MAL_Reviewer_UI.user_controls
         private bool toggleIcon = true;
         private const int defaultSearchInterval = 500;
 
-        // Decides whether a submit is new; only successful submits are remembered.
+        // Decides whether a submit is new, given the running and the last successful submits.
         private readonly SearchGate gate = new SearchGate();
-        private string pendingText;
-        private int pendingKind;
 
         LoaderControl loaderControl;
         private System.Windows.Forms.Timer inputDelay;
@@ -222,6 +220,9 @@ namespace MAL_Reviewer_UI.user_controls
         /// </summary>
         public void Submit()
         {
+            // This submit replaces the one waiting for the typing to stop, (when switching the search kind for instance).
+            this.inputDelay.Stop();
+
             string text = this.inputTextBox.Text.Trim();
             int kind = GetSearchKind();
 
@@ -231,8 +232,7 @@ namespace MAL_Reviewer_UI.user_controls
                 return;
             }
 
-            this.pendingText = text;
-            this.pendingKind = kind;
+            this.gate.MarkSent(text, kind);
 
             // Check if the loading animation is allowed; it's turned on before the handler runs,
             // so a handler that finishes immediately can still turn it off.
@@ -251,10 +251,7 @@ namespace MAL_Reviewer_UI.user_controls
         /// <param name="succeeded"> Whether the submit succeeded. </param>
         public void CompleteSubmit(bool succeeded)
         {
-            if (succeeded)
-            {
-                this.gate.MarkSucceeded(this.pendingText, this.pendingKind);
-            }
+            this.gate.Complete(succeeded);
         }
 
         /// <summary>

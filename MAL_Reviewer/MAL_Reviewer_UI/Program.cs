@@ -26,16 +26,23 @@ namespace MAL_Reviewer_UI
             Core.Init();
 
             // Showing the windows in the chosen theme.
-            Theme.Use(Core.Settings.ThemeSettings.ActivePalette);
+            WindowsTheme.UseSettingsTheme();
 
             // Application shutdown event
             Application.ApplicationExit += (s, e) =>
             {
+                WindowsTheme.StopFollowing();
+
                 // Saving data.
                 TrySave();
             };
 
-            Application.Run(new forms.WelcomeForm());
+            forms.WelcomeForm welcomeForm = new forms.WelcomeForm();
+
+            // Following the Windows mode once the windows' thread is set up, (by creating the first window).
+            WindowsTheme.Follow();
+
+            Application.Run(welcomeForm);
         }
 
         /// <summary>

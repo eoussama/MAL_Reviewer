@@ -146,7 +146,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "LoadUserForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Load your MAL info";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FLoadUser_FormClosing);
             this.Shown += new System.EventHandler(this.LoadUserForm_Shown);

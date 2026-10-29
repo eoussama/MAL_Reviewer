@@ -118,7 +118,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
         {
             if (!this.displaying && ((RadioButton)sender).Checked)
             {
-                Core.Settings.ThemeSettings.Theme = DarkRadioButton.Checked ? ThemeKind.Dark : CustomRadioButton.Checked ? ThemeKind.Custom : ThemeKind.Light;
+                Core.Settings.ThemeSettings.Theme = SystemRadioButton.Checked ? ThemeKind.System : DarkRadioButton.Checked ? ThemeKind.Dark : CustomRadioButton.Checked ? ThemeKind.Custom : ThemeKind.Light;
                 ShowTheme();
             }
         }
@@ -177,7 +177,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
         /// </summary>
         private static void ShowTheme()
         {
-            Theme.Use(Core.Settings.ThemeSettings.ActivePalette);
+            WindowsTheme.UseSettingsTheme();
         }
 
         #endregion
@@ -191,6 +191,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
 
             this.displaying = true;
 
+            SystemRadioButton.Checked = settings.Theme == ThemeKind.System;
             LightRadioButton.Checked = settings.Theme == ThemeKind.Light;
             DarkRadioButton.Checked = settings.Theme == ThemeKind.Dark;
             CustomRadioButton.Checked = settings.Theme == ThemeKind.Custom;

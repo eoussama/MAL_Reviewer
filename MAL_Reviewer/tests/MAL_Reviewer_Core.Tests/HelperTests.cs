@@ -250,6 +250,43 @@ namespace MAL_Reviewer_Core.Tests
         }
 
         [Fact]
+        public void GoingBackDuringASearch_SearchesAgain()
+        {
+            // Issue #13: Anime "naruto" done, Manga "naruto" running, back to Anime: the Manga results must not stay.
+            SearchGate gate = new SearchGate();
+            gate.MarkSucceeded("naruto", 1);
+
+            Assert.True(gate.ShouldSubmit("naruto", 2));
+            gate.MarkSent("naruto", 2);
+
+            Assert.True(gate.ShouldSubmit("naruto", 1));
+            Assert.False(gate.ShouldSubmit(" naruto ", 2));
+        }
+
+        [Fact]
+        public void RunningSearches_AreRememberedOnlyWhenTheySucceed()
+        {
+            SearchGate gate = new SearchGate();
+
+            gate.MarkSent("naruto", 1);
+            gate.Complete(false);
+            Assert.True(gate.ShouldSubmit("naruto", 1));
+
+            gate.MarkSent("naruto", 1);
+            gate.Complete(true);
+            Assert.False(gate.ShouldSubmit("naruto", 1));
+
+            // Completing without a running search changes nothing.
+            gate.Complete(true);
+            Assert.False(gate.ShouldSubmit("naruto", 1));
+
+            gate.MarkSent("bleach", 1);
+            gate.Reset();
+            Assert.True(gate.ShouldSubmit("bleach", 1));
+            Assert.True(gate.ShouldSubmit("naruto", 1));
+        }
+
+        [Fact]
         public void SwitchingKindsBackAndForth_SearchesEachTime()
         {
             // The dashboard bug: the kind must be the selected one, not the last previewed one.

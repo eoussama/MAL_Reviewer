@@ -70,7 +70,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
                 Core.Save();
 
                 // Showing the reset theme.
-                Theme.Use(Core.Settings.ThemeSettings.ActivePalette);
+                WindowsTheme.UseSettingsTheme();
 
                 // Update the displayed information.
                 InitDisplay();
@@ -112,7 +112,7 @@ namespace MAL_Reviewer_UI.forms.sub_forms
                 }
 
                 // Showing the imported theme.
-                Theme.Use(Core.Settings.ThemeSettings.ActivePalette);
+                WindowsTheme.UseSettingsTheme();
                 InitDisplay();
 
                 MessageBox.Show("The settings were imported.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information);

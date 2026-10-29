@@ -582,7 +582,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "NewReviewForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "New Review";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.NewReviewForm_FormClosing);
             this.pPreview.ResumeLayout(false);

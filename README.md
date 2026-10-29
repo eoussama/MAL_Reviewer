@@ -85,7 +85,7 @@ The last 10 loaded users are listed under the username box of the loading window
 **Settings → General** exports the settings to a file and imports them back, and exports the loaded user's Anime and Manga lists,
 either as MAL XML (the format of MyAnimeList's own export, which MyAnimeList and AniList can import) or as CSV for spreadsheets.
 
-The theme (light, dark or custom colors) is picked in **Settings → Theme** and applies right away.
+The theme is picked in **Settings → Theme** and applies right away: the same as Windows (the default, following the light or dark mode of apps in the Windows settings), light, dark or custom colors.
 The forms are designed with the light colors; `MAL_Reviewer_UI/theming/Theme.cs` swaps each of them for the theme's color of the same role (see `MAL_Reviewer_Core/helpers/ThemeMap.cs`).
 
 ## Credits

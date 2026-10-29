@@ -30,6 +30,7 @@
         {
             this.contentPanel = new System.Windows.Forms.Panel();
             this.ThemeLabel = new System.Windows.Forms.Label();
+            this.SystemRadioButton = new System.Windows.Forms.RadioButton();
             this.LightRadioButton = new System.Windows.Forms.RadioButton();
             this.DarkRadioButton = new System.Windows.Forms.RadioButton();
             this.CustomRadioButton = new System.Windows.Forms.RadioButton();
@@ -52,6 +53,7 @@
             this.contentPanel.AutoScroll = true;
             this.contentPanel.BackColor = System.Drawing.Color.Transparent;
             this.contentPanel.Controls.Add(this.ThemeLabel);
+            this.contentPanel.Controls.Add(this.SystemRadioButton);
             this.contentPanel.Controls.Add(this.LightRadioButton);
             this.contentPanel.Controls.Add(this.DarkRadioButton);
             this.contentPanel.Controls.Add(this.CustomRadioButton);
@@ -76,16 +78,29 @@
             this.ThemeLabel.TabIndex = 0;
             this.ThemeLabel.Text = "Theme";
             //
+            // SystemRadioButton
+            //
+            this.SystemRadioButton.AutoSize = true;
+            this.SystemRadioButton.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.SystemRadioButton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.SystemRadioButton.Location = new System.Drawing.Point(9, 28);
+            this.SystemRadioButton.Name = "SystemRadioButton";
+            this.SystemRadioButton.Size = new System.Drawing.Size(104, 17);
+            this.SystemRadioButton.TabIndex = 1;
+            this.SystemRadioButton.TabStop = true;
+            this.SystemRadioButton.Text = "Same as Windows";
+            this.SystemRadioButton.UseVisualStyleBackColor = true;
+            this.SystemRadioButton.CheckedChanged += new System.EventHandler(this.ThemeRadioButton_CheckedChanged);
+            //
             // LightRadioButton
             //
             this.LightRadioButton.AutoSize = true;
             this.LightRadioButton.Cursor = System.Windows.Forms.Cursors.Hand;
             this.LightRadioButton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.LightRadioButton.Location = new System.Drawing.Point(9, 28);
+            this.LightRadioButton.Location = new System.Drawing.Point(129, 28);
             this.LightRadioButton.Name = "LightRadioButton";
             this.LightRadioButton.Size = new System.Drawing.Size(48, 17);
-            this.LightRadioButton.TabIndex = 1;
-            this.LightRadioButton.TabStop = true;
+            this.LightRadioButton.TabIndex = 2;
             this.LightRadioButton.Text = "Light";
             this.LightRadioButton.UseVisualStyleBackColor = true;
             this.LightRadioButton.CheckedChanged += new System.EventHandler(this.ThemeRadioButton_CheckedChanged);
@@ -95,10 +110,10 @@
             this.DarkRadioButton.AutoSize = true;
             this.DarkRadioButton.Cursor = System.Windows.Forms.Cursors.Hand;
             this.DarkRadioButton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.DarkRadioButton.Location = new System.Drawing.Point(80, 28);
+            this.DarkRadioButton.Location = new System.Drawing.Point(194, 28);
             this.DarkRadioButton.Name = "DarkRadioButton";
             this.DarkRadioButton.Size = new System.Drawing.Size(48, 17);
-            this.DarkRadioButton.TabIndex = 2;
+            this.DarkRadioButton.TabIndex = 3;
             this.DarkRadioButton.Text = "Dark";
             this.DarkRadioButton.UseVisualStyleBackColor = true;
             this.DarkRadioButton.CheckedChanged += new System.EventHandler(this.ThemeRadioButton_CheckedChanged);
@@ -108,10 +123,10 @@
             this.CustomRadioButton.AutoSize = true;
             this.CustomRadioButton.Cursor = System.Windows.Forms.Cursors.Hand;
             this.CustomRadioButton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.CustomRadioButton.Location = new System.Drawing.Point(151, 28);
+            this.CustomRadioButton.Location = new System.Drawing.Point(259, 28);
             this.CustomRadioButton.Name = "CustomRadioButton";
             this.CustomRadioButton.Size = new System.Drawing.Size(60, 17);
-            this.CustomRadioButton.TabIndex = 3;
+            this.CustomRadioButton.TabIndex = 4;
             this.CustomRadioButton.Text = "Custom";
             this.CustomRadioButton.UseVisualStyleBackColor = true;
             this.CustomRadioButton.CheckedChanged += new System.EventHandler(this.ThemeRadioButton_CheckedChanged);
@@ -238,6 +253,7 @@
         #endregion
         private System.Windows.Forms.Panel contentPanel;
         private System.Windows.Forms.Label ThemeLabel;
+        private System.Windows.Forms.RadioButton SystemRadioButton;
         private System.Windows.Forms.RadioButton LightRadioButton;
         private System.Windows.Forms.RadioButton DarkRadioButton;
         private System.Windows.Forms.RadioButton CustomRadioButton;

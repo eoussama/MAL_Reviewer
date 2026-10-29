@@ -259,25 +259,34 @@ namespace MAL_Reviewer_Core.Tests
     public class ThemeControllerTests
     {
         [Fact]
-        public void Defaults_AreTheLightTheme()
+        public void Defaults_FollowWindows()
         {
             ThemeController settings = new ThemeController();
 
-            Assert.Equal(ThemeKind.Light, settings.Theme);
-            Assert.Null(settings.ActivePalette);
+            Assert.Equal(ThemeKind.System, settings.Theme);
+            Assert.Null(settings.PaletteFor(windowsIsDark: false));
+            Assert.True(settings.PaletteFor(windowsIsDark: true).SameColors(ThemePalette.Dark));
             Assert.True(settings.CustomColors.SameColors(ThemePalette.Light));
         }
 
+        [Theory]
+        [InlineData(ThemeKind.Light, false)]
+        [InlineData(ThemeKind.Light, true)]
+        public void TheLightTheme_KeepsTheDesignedColors_WhateverWindowsUses(ThemeKind theme, bool windowsIsDark)
+        {
+            Assert.Null(new ThemeController { Theme = theme }.PaletteFor(windowsIsDark));
+        }
+
         [Fact]
-        public void ActivePalette_FollowsTheTheme()
+        public void PaletteFor_FollowsTheTheme()
         {
             ThemeController settings = new ThemeController { Theme = ThemeKind.Dark };
-            Assert.True(settings.ActivePalette.SameColors(ThemePalette.Dark));
+            Assert.True(settings.PaletteFor(windowsIsDark: false).SameColors(ThemePalette.Dark));
 
             settings.Theme = ThemeKind.Custom;
             settings.CustomColors[ThemeRole.Text] = Color.Red;
 
-            ThemePalette active = settings.ActivePalette;
+            ThemePalette active = settings.PaletteFor(windowsIsDark: true);
             Assert.Equal(Color.Red.ToArgb(), active[ThemeRole.Text].ToArgb());
 
             // The palette in use is a copy.
@@ -290,7 +299,7 @@ namespace MAL_Reviewer_Core.Tests
         {
             ThemeController settings = new ThemeController { Theme = (ThemeKind)42, CustomColors = null };
 
-            Assert.Equal(ThemeKind.Light, settings.Theme);
+            Assert.Equal(ThemeKind.System, settings.Theme);
             Assert.True(settings.CustomColors.SameColors(ThemePalette.Light));
         }
 
@@ -299,7 +308,7 @@ namespace MAL_Reviewer_Core.Tests
         {
             ThemeController settings = new ThemeController { Theme = ThemeKind.Custom, CustomColors = ThemePalette.Dark };
             settings.SeedSettings();
-            Assert.Equal(ThemeKind.Light, settings.Theme);
+            Assert.Equal(ThemeKind.System, settings.Theme);
 
             settings.CustomColors = ThemePalette.Dark;
             settings.ResetSettings();
@@ -334,7 +343,7 @@ namespace MAL_Reviewer_Core.Tests
         }
 
         [Fact]
-        public void FilesWithoutThemeSettings_GetTheLightTheme()
+        public void FilesWithoutThemeSettings_FollowWindows()
         {
             using (TempStorage storage = new TempStorage())
             {
@@ -344,16 +353,19 @@ namespace MAL_Reviewer_Core.Tests
                 Settings settings = new Settings(storage.Config);
 
                 Assert.Equal(SettingsLoadResult.Loaded, settings.LoadSettings());
-                Assert.Equal(ThemeKind.Light, settings.ThemeSettings.Theme);
+                Assert.Equal(ThemeKind.System, settings.ThemeSettings.Theme);
             }
         }
 
         [Theory]
         [InlineData("\"dark\"", ThemeKind.Dark)]
         [InlineData("2", ThemeKind.Custom)]
-        [InlineData("\"sideways\"", ThemeKind.Light)]
-        [InlineData("7", ThemeKind.Light)]
-        [InlineData("[1]", ThemeKind.Light)]
+        [InlineData("\"light\"", ThemeKind.Light)]
+        [InlineData("\"system\"", ThemeKind.System)]
+        [InlineData("3", ThemeKind.System)]
+        [InlineData("\"sideways\"", ThemeKind.System)]
+        [InlineData("7", ThemeKind.System)]
+        [InlineData("[1]", ThemeKind.System)]
         public void UnknownThemes_DontMakeTheFileUnreadable(string theme, ThemeKind expected)
         {
             using (TempStorage storage = new TempStorage())
@@ -405,7 +417,7 @@ namespace MAL_Reviewer_Core.Tests
 
                 settings.ResetSettings();
 
-                Assert.Equal(ThemeKind.Light, settings.ThemeSettings.Theme);
+                Assert.Equal(ThemeKind.System, settings.ThemeSettings.Theme);
 
                 storage.Config.PrepareStorageFolder();
                 File.WriteAllBytes(storage.File(Settings.LegacyStorageFile), LegacyPayload.Write("someone"));
@@ -413,7 +425,7 @@ namespace MAL_Reviewer_Core.Tests
                 Settings migrated = new Settings(storage.Config);
 
                 Assert.Equal(SettingsLoadResult.Migrated, migrated.LoadSettings());
-                Assert.Equal(ThemeKind.Light, migrated.ThemeSettings.Theme);
+                Assert.Equal(ThemeKind.System, migrated.ThemeSettings.Theme);
             }
         }
     }
