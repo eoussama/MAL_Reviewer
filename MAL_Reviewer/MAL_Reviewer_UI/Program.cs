@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Windows.Forms;
 using MAL_Reviewer_Core;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI
 {
@@ -23,6 +24,9 @@ namespace MAL_Reviewer_UI
 
             // Initializing the application's core.
             Core.Init();
+
+            // Showing the windows in the chosen theme.
+            Theme.Use(Core.Settings.ThemeSettings.ActivePalette);
 
             // Application shutdown event
             Application.ApplicationExit += (s, e) =>

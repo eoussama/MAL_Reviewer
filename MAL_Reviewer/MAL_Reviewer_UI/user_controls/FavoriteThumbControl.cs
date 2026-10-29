@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using MAL_Reviewer_UI.extensions;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.user_controls
 {
@@ -39,8 +40,8 @@ namespace MAL_Reviewer_UI.user_controls
                 Shell.Open(this.Tag);
         }
 
-        private void UcFavoriteThumb_MouseEnter(object sender, System.EventArgs e) => this.BackColor = SystemColors.Control;
+        private void UcFavoriteThumb_MouseEnter(object sender, System.EventArgs e) => this.SetThemedBackColor(SystemColors.Control);
 
-        private void UcFavoriteThumb_MouseLeave(object sender, System.EventArgs e) => this.BackColor = SystemColors.ControlLight;
+        private void UcFavoriteThumb_MouseLeave(object sender, System.EventArgs e) => this.SetThemedBackColor(SystemColors.ControlLight);
     }
 }

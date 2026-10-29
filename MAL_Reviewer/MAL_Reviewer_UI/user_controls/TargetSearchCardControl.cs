@@ -4,20 +4,29 @@ using System.Drawing;
 using System.Windows.Forms;
 using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_UI.extensions;
+using MAL_Reviewer_UI.interfaces;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.user_controls
 {
     /// <summary>
     /// Search card control.
     /// </summary>
-    public partial class TargetSearchCardControl : UserControl
+    public partial class TargetSearchCardControl : UserControl, IThemedControl
     {
         public event EventHandler<int> CardMouseClickEvent;
         private int targetId;
 
+        /// <summary>
+        /// The loading animation shown until the cover is downloaded.
+        /// </summary>
+        private Image placeholder;
+
         public TargetSearchCardControl()
         {
             InitializeComponent();
+
+            this.placeholder = this.pbTargetImage.Image;
 
             // Wiring up the click event.
             this.MouseClick += UcTargetSearchCard_MouseClick;
@@ -71,8 +80,20 @@ namespace MAL_Reviewer_UI.user_controls
                 CardMouseClickEvent?.Invoke(sender, TargetId);
         }
 
-        private void CardMouseEnter(object sender, EventArgs e) => this.BackColor = SystemColors.Control;
+        private void CardMouseEnter(object sender, EventArgs e) => this.SetThemedBackColor(SystemColors.Control);
 
-        private void CardMouseLeave(object sender, EventArgs e) => this.BackColor = SystemColors.ControlLight;
+        private void CardMouseLeave(object sender, EventArgs e) => this.SetThemedBackColor(SystemColors.ControlLight);
+
+        /// <summary>
+        /// Recolors the loading animation for the theme, unless the cover is already shown.
+        /// </summary>
+        public void ApplyTheme()
+        {
+            if (this.pbTargetImage.Image == this.placeholder)
+            {
+                this.placeholder = Icons.Loading(Theme.Back(SystemColors.ControlLight));
+                this.pbTargetImage.Image = this.placeholder;
+            }
+        }
     }
 }

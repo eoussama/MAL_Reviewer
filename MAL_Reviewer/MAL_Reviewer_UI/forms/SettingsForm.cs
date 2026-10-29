@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using MAL_Reviewer_UI.extensions;
 using MAL_Reviewer_UI.forms.sub_forms;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.forms
 {
@@ -73,6 +74,9 @@ namespace MAL_Reviewer_UI.forms
             });
 
             GeneralButton_Click(GeneralButton, EventArgs.Empty);
+
+            // Showing the form in the chosen theme.
+            Theme.Attach(this);
         }
 
         #endregion

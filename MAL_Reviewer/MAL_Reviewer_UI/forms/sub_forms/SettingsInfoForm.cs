@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_UI.extensions;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.forms.sub_forms
 {
@@ -238,11 +239,11 @@ namespace MAL_Reviewer_UI.forms.sub_forms
         /// <param name="color"></param>
         private void SetSectionColor(Panel panel, Color color)
         {
-            panel.BackColor = color;
+            panel.SetThemedBackColor(color);
 
             foreach (Control control in panel.Controls)
             {
-                control.BackColor = color;
+                control.SetThemedBackColor(color);
             }
         }
 

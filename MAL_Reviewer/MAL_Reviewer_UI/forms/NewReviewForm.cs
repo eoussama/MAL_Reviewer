@@ -14,6 +14,7 @@ using MAL_Reviewer_API;
 using MAL_Reviewer_API.models.SearchModels;
 using MAL_Reviewer_API.models.TargetModels;
 using MAL_Reviewer_API.sources;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.forms
 {
@@ -124,6 +125,9 @@ namespace MAL_Reviewer_UI.forms
 
             this.ActiveControl = this.searchControl.Controls["inputTextBox"];
             ApplyMode();
+
+            // Showing the form in the chosen theme.
+            Theme.Attach(this);
         }
 
         #endregion
@@ -635,8 +639,8 @@ namespace MAL_Reviewer_UI.forms
         private System.Drawing.Image CurrentIcon() => this.mode == SearchMode.Link ? Icons.Link : rbAnime.Checked ? Icons.Anime : Icons.Manga;
 
         private string HintText(string target) => this.mode == SearchMode.Link
-            ? $"Paste the MyAnimeList link of the Anime or Manga you want to review, (ex: { MalLink.Example }), and its information will be fetched from MAL."
-            : $"Input the { target } title you want review on the text box above, meanwhile we will fetch any related data from MAL to help provide more information on the review target. A MyAnimeList link works too.";
+            ? $"Paste the MyAnimeList link of the Anime or Manga you want to review, (ex: { MalLink.Example })."
+            : $"Input the title of the { target } you want to review above, or paste its MyAnimeList link, and its information will be fetched from MAL.";
 
         #endregion
 

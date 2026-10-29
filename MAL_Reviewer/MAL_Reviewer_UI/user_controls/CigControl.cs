@@ -1,5 +1,6 @@
 ﻿using System.Windows.Forms;
 using System.Drawing;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.user_controls
 {
@@ -71,14 +72,14 @@ namespace MAL_Reviewer_UI.user_controls
 
         private void CigControl_MouseEnter(object sender, System.EventArgs e)
         {
-            this.closeLabel.ForeColor = Color.Black;
-            this.BackColor = SystemColors.ControlLight;
+            this.closeLabel.SetThemedForeColor(Color.Black);
+            this.SetThemedBackColor(SystemColors.ControlLight);
         }
 
         private void CigControl_MouseLeave(object sender, System.EventArgs e)
         {
-            this.closeLabel.ForeColor = SystemColors.ControlDark;
-            this.BackColor = SystemColors.Control;
+            this.closeLabel.SetThemedForeColor(SystemColors.ControlDark);
+            this.SetThemedBackColor(SystemColors.Control);
         }
     }
 }

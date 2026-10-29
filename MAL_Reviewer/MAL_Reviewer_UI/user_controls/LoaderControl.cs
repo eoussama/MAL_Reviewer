@@ -2,10 +2,11 @@
 using System.Windows.Forms;
 using System.Drawing;
 using MAL_Reviewer_UI.extensions;
+using MAL_Reviewer_UI.interfaces;
 
 namespace MAL_Reviewer_UI.user_controls
 {
-    public partial class LoaderControl : UserControl
+    public partial class LoaderControl : UserControl, IThemedControl
     {
         /// <summary>
         /// Get and set the user control's back color.
@@ -18,7 +19,7 @@ namespace MAL_Reviewer_UI.user_controls
             {
                 this.BackColor = value;
                 this.LoaderPictureBox.BackColor = value;
-                this.LoaderPictureBox.Image = GetProperImage();
+                this.LoaderPictureBox.Image = Icons.Loading(value);
             }
         }
 
@@ -29,27 +30,11 @@ namespace MAL_Reviewer_UI.user_controls
         }
 
         /// <summary>
-        /// Get the apropriate loading gif given the background color.
+        /// Recolors the loading animation for the theme's background.
         /// </summary>
-        /// <returns></returns>
-        private Image GetProperImage()
+        public void ApplyTheme()
         {
-            Image _image = null;
-
-            switch (this.Color.Name)
-            {
-                case "White":
-                    _image = Icons.LoadingWhite;
-                    break;
-                case "ControlLight":
-                    _image = Icons.LoadingControlLight;
-                    break;
-                default:
-                    _image = Icons.LoadingControl;
-                    break;
-            }
-
-            return _image;
+            this.LoaderPictureBox.Image = Icons.Loading(this.BackColor);
         }
     }
 }

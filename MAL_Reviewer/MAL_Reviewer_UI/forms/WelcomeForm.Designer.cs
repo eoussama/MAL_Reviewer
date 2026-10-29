@@ -43,7 +43,7 @@
             this.bNew = new System.Windows.Forms.Button();
             this.pMain = new System.Windows.Forms.Panel();
             this.pDashboard = new System.Windows.Forms.Panel();
-            this.tcDashboard = new System.Windows.Forms.TabControl();
+            this.tcDashboard = new MAL_Reviewer_UI.theming.ThemedTabControl();
             this.tpProfile = new System.Windows.Forms.TabPage();
             this.tlpDashboardMain = new System.Windows.Forms.TableLayoutPanel();
             this.pDashAbout = new System.Windows.Forms.Panel();
@@ -1628,7 +1628,7 @@
         private System.Windows.Forms.Panel pReviews;
         private System.Windows.Forms.Label lVersion;
         private System.Windows.Forms.Panel pDashboard;
-        private System.Windows.Forms.TabControl tcDashboard;
+        private MAL_Reviewer_UI.theming.ThemedTabControl tcDashboard;
         private System.Windows.Forms.TabPage tpProfile;
         private System.Windows.Forms.TabPage tpAnimelist;
         private System.Windows.Forms.TabPage tpMangalist;

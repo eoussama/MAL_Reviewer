@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_Core.models.ReviewTemplateModels;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.user_controls
 {
@@ -65,13 +66,13 @@ namespace MAL_Reviewer_UI.user_controls
             get => this.BackColor;
             set
             {
-                this.BackColor = value;
-                this.containerPanel.BackColor = value;
+                this.SetThemedBackColor(value);
+                this.containerPanel.SetThemedBackColor(value);
 
                 // Changing the backcolor of all children of the container panel.
                 foreach (Control control in this.containerPanel.Controls)
                 {
-                    control.BackColor = value;
+                    control.SetThemedBackColor(value);
                 }
             }
         }

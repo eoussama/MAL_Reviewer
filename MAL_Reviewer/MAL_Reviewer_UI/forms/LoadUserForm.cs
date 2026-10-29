@@ -7,6 +7,7 @@ using MAL_Reviewer_Core;
 using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_Core.services;
 using MAL_Reviewer_UI.extensions;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.forms
 {
@@ -59,6 +60,9 @@ namespace MAL_Reviewer_UI.forms
             this.ActiveControl = searchControl.Controls["inputTextBox"];
             this.searchControl.MaxLength = UsernameRule.MaxLength;
             cts = new CancellationTokenSource();
+
+            // Showing the form in the chosen theme.
+            Theme.Attach(this);
         }
 
         /// <summary>

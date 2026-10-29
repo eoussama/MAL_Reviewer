@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using MAL_Reviewer_Core;
 using MAL_Reviewer_UI.extensions;
 using MAL_Reviewer_UI.interfaces;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.forms.sub_forms
 {
@@ -58,6 +59,9 @@ namespace MAL_Reviewer_UI.forms.sub_forms
                 // Resetting the application's settings.
                 Core.Settings.ResetSettings();
                 Core.Save();
+
+                // Showing the reset theme.
+                Theme.Use(Core.Settings.ThemeSettings.ActivePalette);
 
                 // Update the displayed information.
                 InitDisplay();

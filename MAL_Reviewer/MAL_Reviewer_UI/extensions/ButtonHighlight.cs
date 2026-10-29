@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.extensions
 {
@@ -15,10 +16,10 @@ namespace MAL_Reviewer_UI.extensions
         public static void Highlight(this Button button, Color highlightColor, Color normalColor, List<Button> peers)
         {
             // Highlighting the button.
-            button.BackColor = highlightColor;
+            button.SetThemedBackColor(highlightColor);
 
             // Unhighlighting the other buttons.
-            peers.ForEach(btn => btn.BackColor = normalColor);
+            peers.ForEach(btn => btn.SetThemedBackColor(normalColor));
         }
     }
 }

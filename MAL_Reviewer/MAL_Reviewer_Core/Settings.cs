@@ -85,6 +85,11 @@ namespace MAL_Reviewer_Core
         public SearchController SearchSettings { get; set; }
 
         /// <summary>
+        /// The theme settings.
+        /// </summary>
+        public ThemeController ThemeSettings { get; set; }
+
+        /// <summary>
         /// The file the unreadable settings were moved to by the last load, if any.
         /// </summary>
         public string RecoveredFilePath { get; private set; }
@@ -103,6 +108,7 @@ namespace MAL_Reviewer_Core
             this.UserSettings = new UserController();
             this.ReviewTemplatesSettings = new ReviewTemplatesController();
             this.SearchSettings = new SearchController();
+            this.ThemeSettings = new ThemeController();
         }
 
         #endregion
@@ -148,6 +154,7 @@ namespace MAL_Reviewer_Core
                 this.UserSettings = new UserController { DefaultUser = legacy.DefaultUser ?? string.Empty };
                 this.ReviewTemplatesSettings = new ReviewTemplatesController { ReviewTemplates = legacy.ReviewTemplates };
                 this.SearchSettings = new SearchController();
+                this.ThemeSettings = new ThemeController();
 
                 // Saving in the new format first, so the old file is only set aside once its data is safe.
                 SaveSettings();
@@ -176,7 +183,8 @@ namespace MAL_Reviewer_Core
                 FormatVersion = FormatVersion,
                 User = this.UserSettings,
                 ReviewTemplates = this.ReviewTemplatesSettings.ReviewTemplates,
-                Search = this.SearchSettings
+                Search = this.SearchSettings,
+                Theme = this.ThemeSettings
             };
 
             // Writing next to the target first, so an interrupted save never leaves a half-written file.
@@ -198,6 +206,9 @@ namespace MAL_Reviewer_Core
 
             // Seeding the search settings.
             this.SearchSettings.SeedSettings();
+
+            // Seeding the theme settings.
+            this.ThemeSettings.SeedSettings();
         }
 
         /// <summary>
@@ -213,6 +224,9 @@ namespace MAL_Reviewer_Core
 
             // Resetting the search settings.
             this.SearchSettings.ResetSettings();
+
+            // Resetting the theme settings.
+            this.ThemeSettings.ResetSettings();
         }
 
         #endregion
@@ -224,6 +238,7 @@ namespace MAL_Reviewer_Core
             this.UserSettings = new UserController();
             this.ReviewTemplatesSettings = new ReviewTemplatesController();
             this.SearchSettings = new SearchController();
+            this.ThemeSettings = new ThemeController();
 
             SeedSettings();
         }
@@ -247,6 +262,7 @@ namespace MAL_Reviewer_Core
 
             this.ReviewTemplatesSettings = new ReviewTemplatesController { ReviewTemplates = templates };
             this.SearchSettings = document.Search ?? new SearchController();
+            this.ThemeSettings = document.Theme ?? new ThemeController();
         }
 
         #endregion
@@ -266,6 +282,9 @@ namespace MAL_Reviewer_Core
 
             [JsonPropertyName("search")]
             public SearchController Search { get; set; }
+
+            [JsonPropertyName("theme")]
+            public ThemeController Theme { get; set; }
         }
 
         #endregion

@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using MAL_Reviewer_UI.extensions;
+using MAL_Reviewer_UI.interfaces;
 using MAL_Reviewer_UI.user_controls;
 using MAL_Reviewer_API.models.ListEntryModels;
 using MAL_Reviewer_API.models.UserModels;
 using MAL_Reviewer_Core;
 using MAL_Reviewer_Core.enumerations;
 using MAL_Reviewer_Core.helpers;
+using MAL_Reviewer_UI.theming;
 
 namespace MAL_Reviewer_UI.forms
 {
@@ -16,7 +18,7 @@ namespace MAL_Reviewer_UI.forms
     /// The application's initial form.
     /// The home of the dashboard and the bridge to other parts of the application.
     /// </summary>
-    public partial class WelcomeForm : Form
+    public partial class WelcomeForm : Form, IThemedControl
     {
         #region Fields
 
@@ -24,6 +26,11 @@ namespace MAL_Reviewer_UI.forms
         /// The text of the user button when no MAL account is loaded.
         /// </summary>
         private readonly string loadUserText;
+
+        /// <summary>
+        /// The dashboard's loading animation, made for the light theme.
+        /// </summary>
+        private readonly System.Drawing.Image dashboardLoading;
 
         #endregion
 
@@ -60,6 +67,10 @@ namespace MAL_Reviewer_UI.forms
             CreateCards();
             CreateLists(TargetType.Anime);
             CreateLists(TargetType.Manga);
+
+            // Showing the form in the chosen theme.
+            this.dashboardLoading = pbDashBoardLoad.Image;
+            Theme.Attach(this);
         }
 
         #endregion
@@ -628,6 +639,14 @@ namespace MAL_Reviewer_UI.forms
             {
                 newReviewForm.ShowDialog(this);
             }
+        }
+
+        /// <summary>
+        /// Recolors the dashboard's loading animation for the theme.
+        /// </summary>
+        public void ApplyTheme()
+        {
+            pbDashBoardLoad.Image = Theme.Palette == null ? this.dashboardLoading : Icons.Loading(Theme.Palette[ThemeRole.Background]);
         }
     }
 }

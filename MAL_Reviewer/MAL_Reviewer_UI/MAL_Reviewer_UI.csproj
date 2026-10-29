@@ -34,6 +34,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <!-- The loading animation as a file, so it can be recolored to fit the theme. -->
+    <EmbeddedResource Include="images\loading-gifs\loading_gif_control.gif" LogicalName="loading.gif" />
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

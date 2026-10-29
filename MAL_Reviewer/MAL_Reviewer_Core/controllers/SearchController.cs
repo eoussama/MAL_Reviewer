@@ -1,7 +1,7 @@
 using System;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using MAL_Reviewer_Core.enumerations;
+using MAL_Reviewer_Core.helpers;
 using MAL_Reviewer_Core.interfaces;
 
 namespace MAL_Reviewer_Core.controllers
@@ -72,7 +72,7 @@ namespace MAL_Reviewer_Core.controllers
         /// <summary>
         /// Whether the search starts by title or by link.
         /// </summary>
-        [JsonConverter(typeof(LenientSearchModeConverter))]
+        [JsonConverter(typeof(LenientEnumConverter<SearchMode>))]
         public SearchMode DefaultMode
         {
             get => this.defaultMode;
@@ -112,34 +112,5 @@ namespace MAL_Reviewer_Core.controllers
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// Writes the search mode as its name, and reads names or numbers; an unknown value means
-    /// <see cref="SearchMode.Title"/> rather than making the whole settings file unreadable.
-    /// </summary>
-    internal class LenientSearchModeConverter : JsonConverter<SearchMode>
-    {
-        public override SearchMode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            if (reader.TokenType == JsonTokenType.String && Enum.TryParse(reader.GetString(), true, out SearchMode mode) && Enum.IsDefined(mode))
-            {
-                return mode;
-            }
-
-            if (reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out int number) && Enum.IsDefined((SearchMode)number))
-            {
-                return (SearchMode)number;
-            }
-
-            reader.Skip();
-
-            return SearchMode.Title;
-        }
-
-        public override void Write(Utf8JsonWriter writer, SearchMode value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value.ToString());
-        }
     }
 }
