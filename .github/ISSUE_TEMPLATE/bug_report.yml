@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in MAL Reviewer doesn't work as it should.
+labels: ["Bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please search the existing issues first, and report security problems privately (see the security policy).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What went wrong, and any error message shown.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open New Review
+        2. Search "naruto" as an Anime
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown in Settings → Info.
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Theme
+      options:
+        - Same as Windows (light)
+        - Same as Windows (dark)
+        - Light
+        - Dark
+        - Custom
+  - type: textarea
+    id: more
+    attributes:
+      label: Screenshots or anything else
+      description: Screenshots help a lot for display problems. Leave out anything private.

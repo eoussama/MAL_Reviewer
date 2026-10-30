@@ -788,11 +788,12 @@
             // lDashMangaMeanScore
             // 
             this.lDashMangaMeanScore.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lDashMangaMeanScore.AutoSize = true;
-            this.lDashMangaMeanScore.Location = new System.Drawing.Point(210, 80);
+            this.lDashMangaMeanScore.AutoSize = false;
+            this.lDashMangaMeanScore.Location = new System.Drawing.Point(156, 80);
             this.lDashMangaMeanScore.Margin = new System.Windows.Forms.Padding(0);
             this.lDashMangaMeanScore.Name = "lDashMangaMeanScore";
-            this.lDashMangaMeanScore.Size = new System.Drawing.Size(75, 16);
+            this.lDashMangaMeanScore.Size = new System.Drawing.Size(120, 16);
+            this.lDashMangaMeanScore.TextAlign = System.Drawing.ContentAlignment.TopRight;
             this.lDashMangaMeanScore.TabIndex = 36;
             this.lDashMangaMeanScore.Text = "Mean Score";
             // 
@@ -811,11 +812,12 @@
             // lDashMangaDaysRead
             // 
             this.lDashMangaDaysRead.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lDashMangaDaysRead.AutoSize = true;
-            this.lDashMangaDaysRead.Location = new System.Drawing.Point(217, 1);
+            this.lDashMangaDaysRead.AutoSize = false;
+            this.lDashMangaDaysRead.Location = new System.Drawing.Point(156, 1);
             this.lDashMangaDaysRead.Margin = new System.Windows.Forms.Padding(0);
             this.lDashMangaDaysRead.Name = "lDashMangaDaysRead";
-            this.lDashMangaDaysRead.Size = new System.Drawing.Size(68, 16);
+            this.lDashMangaDaysRead.Size = new System.Drawing.Size(120, 16);
+            this.lDashMangaDaysRead.TextAlign = System.Drawing.ContentAlignment.TopRight;
             this.lDashMangaDaysRead.TabIndex = 34;
             this.lDashMangaDaysRead.Text = "Days Read";
             // 
@@ -1003,11 +1005,12 @@
             // lDashAnimeMeanScore
             // 
             this.lDashAnimeMeanScore.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lDashAnimeMeanScore.AutoSize = true;
-            this.lDashAnimeMeanScore.Location = new System.Drawing.Point(209, 81);
+            this.lDashAnimeMeanScore.AutoSize = false;
+            this.lDashAnimeMeanScore.Location = new System.Drawing.Point(155, 81);
             this.lDashAnimeMeanScore.Margin = new System.Windows.Forms.Padding(0);
             this.lDashAnimeMeanScore.Name = "lDashAnimeMeanScore";
-            this.lDashAnimeMeanScore.Size = new System.Drawing.Size(75, 16);
+            this.lDashAnimeMeanScore.Size = new System.Drawing.Size(120, 16);
+            this.lDashAnimeMeanScore.TextAlign = System.Drawing.ContentAlignment.TopRight;
             this.lDashAnimeMeanScore.TabIndex = 17;
             this.lDashAnimeMeanScore.Text = "Mean Score";
             // 
@@ -1026,11 +1029,12 @@
             // lDashAnimeDaysWatched
             // 
             this.lDashAnimeDaysWatched.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lDashAnimeDaysWatched.AutoSize = true;
-            this.lDashAnimeDaysWatched.Location = new System.Drawing.Point(196, 1);
+            this.lDashAnimeDaysWatched.AutoSize = false;
+            this.lDashAnimeDaysWatched.Location = new System.Drawing.Point(155, 1);
             this.lDashAnimeDaysWatched.Margin = new System.Windows.Forms.Padding(0);
             this.lDashAnimeDaysWatched.Name = "lDashAnimeDaysWatched";
-            this.lDashAnimeDaysWatched.Size = new System.Drawing.Size(88, 16);
+            this.lDashAnimeDaysWatched.Size = new System.Drawing.Size(120, 16);
+            this.lDashAnimeDaysWatched.TextAlign = System.Drawing.ContentAlignment.TopRight;
             this.lDashAnimeDaysWatched.TabIndex = 15;
             this.lDashAnimeDaysWatched.Text = "Days Watched";
             // 

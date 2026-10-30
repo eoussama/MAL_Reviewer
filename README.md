@@ -6,6 +6,8 @@
 ## Description
 MAL Reviewer is an unofficial productivity booster application that organizes and simplifies writing Anime and Manga reviews for [MyAnimeList](https://myanimelist.net/). For you out there who like to keep records of their reviews on a local drive, you can finally ditch the lengthy manual process of managing your reviews in separate text files and take advantage of MAL reviewer and its wide range of tools.
 
+See the [showcase](docs/showcase/README.md) for screenshots of the dashboard, the themes, writing a review and the settings.
+
 ## Requirements
 MAL Reviewer is a Windows desktop application (.NET 11, Windows Forms).
 

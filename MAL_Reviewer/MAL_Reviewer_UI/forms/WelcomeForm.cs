@@ -23,6 +23,11 @@ namespace MAL_Reviewer_UI.forms
         #region Fields
 
         /// <summary>
+        /// The size the window opens at, when the screen is large enough.
+        /// </summary>
+        private static readonly System.Drawing.Size OpeningSize = new System.Drawing.Size(1280, 800);
+
+        /// <summary>
         /// The text of the user button when no MAL account is loaded.
         /// </summary>
         private readonly string loadUserText;
@@ -42,6 +47,10 @@ namespace MAL_Reviewer_UI.forms
         public WelcomeForm()
         {
             InitializeComponent();
+
+            // Opening large enough for the dashboard, without covering more than the screen.
+            System.Drawing.Rectangle screen = Screen.PrimaryScreen.WorkingArea;
+            this.Size = new System.Drawing.Size(Math.Min(OpeningSize.Width, screen.Width), Math.Min(OpeningSize.Height, screen.Height));
 
             // Fetching application info.
             lTitle.Text = AppInfo.Title;
